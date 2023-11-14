@@ -48,7 +48,7 @@ class TableView(APIView):
                     ],
                 "data": [],
                 "componentTitle": "",
-                "pageTotal": 1
+                "pageTotal": pages.count
             }
         }
         for file in files:
