@@ -5,12 +5,16 @@ import datetime
 
 from .storage import is_allowed_file, is_duplicate_name, UPLOAD_FOLDER
 from .models import File
+from django.core.paginator import Paginator
 
 class TableView(APIView):
     def post(self, request):
         '''查询数据库中全部的文件
         '''
-        files = File.objects.all()
+        pages = Paginator(File.objects.order_by('created'), int(request.data.get("size")))
+        files = pages.get_page(request.data.get("currentPage")).object_list
+        
+
         res = {
             "message": "查询成功",
             "content": {
@@ -49,7 +53,7 @@ class TableView(APIView):
         }
         for file in files:
             res["content"]["data"].append({
-                "id": file.hash,
+                "id": file.pk,
                 "dataName": file.name,
                 "dataDescription": file.description,
                 "rowCount": file.row,
@@ -100,5 +104,13 @@ class FileView(APIView):
     def put(self, request):
         pass
 
-    def delete(self, request):
-        pass
+    def delete(self, request, pk):
+        """文件删除
+        """
+        file = File.objects.get(pk=pk)
+        if file is not None:
+            os.remove(file.path)
+        res = {
+            "message": "删除成功"
+        }
+        return Response(res, status=status.HTTP_200_OK)
