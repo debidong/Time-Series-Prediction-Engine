@@ -19,5 +19,5 @@ class File(models.Model):
     optimization = models.CharField(max_length=16)
 
     verificationRate = models.FloatField()
-    dataset = models.ForeignKey(to=File, on_delete=models.CASCADE)
-    target = models.ForeignKey(to=File, on_delete=models.CASCADE)
+    dataset = models.ForeignKey(to=File, related_name="dataset" ,on_delete=models.CASCADE)
+    target = models.ForeignKey(to=File, related_name="target" ,on_delete=models.CASCADE)
