@@ -1,5 +1,17 @@
 import pandas as pd
 import numpy as np
+from rest_framework.views import APIView, Response, status
+
+class GetAlgorithmView(APIView):
+    def post(request):
+        pass
+
+class AlgorithmView(APIView):
+    def post(request):
+        pass
+    def delete(request, pk):
+        pass
+
 
 def analyze_csv(file_path):
     '''分析CSV文件
