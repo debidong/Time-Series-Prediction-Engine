@@ -79,7 +79,7 @@ class FileView(APIView):
                 "message": "存在重复文件",
                 "content": False
             }
-            return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(res, status=status.HTTP_200_OK)
         path = UPLOAD_FOLDER+"/"+file.name
         with open(path, "wb+") as destination:
             for chunk in file.chunks():
