@@ -16,6 +16,7 @@ class TableView(APIView):
         
 
         res = {
+            "status": 200,
             "message": "查询成功",
             "content": {
                 "columns": [
@@ -74,6 +75,7 @@ class FileView(APIView):
         
         if is_duplicate_name(file.name):
             res = {
+                "status": 500,
                 "message": "存在重复文件",
                 "content": False
             }
@@ -96,6 +98,7 @@ class FileView(APIView):
         ).save()
 
         res = {
+            "status": 200,
             "message": "查询成功",
             "content": True
         }
