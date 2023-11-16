@@ -114,6 +114,7 @@ class FileView(APIView):
         if file is not None:
             os.remove(file.path)
         res = {
+            "status": 200,
             "message": "删除成功"
         }
         return Response(res, status=status.HTTP_200_OK)
