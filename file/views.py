@@ -63,6 +63,10 @@ class TableView(APIView):
             })
         return Response(res, status=status.HTTP_200_OK)
 
+class GetFileView(APIView):
+    def post(self, request):
+        """查询单个文件
+        """
 
 class FileView(APIView):
     def post(self, request):
@@ -107,10 +111,10 @@ class FileView(APIView):
     def put(self, request):
         pass
 
-    def delete(self, request, pk):
+    def delete(self, request):
         """文件删除
         """
-        file = File.objects.get(pk=pk)
+        file = File.objects.get(pk=request.data.get("id"))
         if file is not None:
             os.remove(file.path)
         res = {
