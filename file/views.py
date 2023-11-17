@@ -65,8 +65,32 @@ class TableView(APIView):
 
 class GetFileView(APIView):
     def post(self, request):
-        """查询单个文件
+        """解析单个文件
         """
+        file = File.objects.get(pk=request.data.get("id")) or File.objects.get(name=request.data.get("name"))
+        if file is not None:
+            path = file.path
+            dumped_file = pd.read_csv(path)
+            res = {
+                "status": 200,
+                "message": "查询成功",
+                "content": {
+                    "columns": [],
+                    "data": []
+                }
+            }
+            columns = dumped_file.columns.to_list()
+            res["content"]["columns"] = columns
+            for column in columns:
+                res["content"]["data"].append(dumped_file[column].to_list())
+                return Response(res, status=status.HTTP_200_OK)
+        else:
+            res = {
+                "status": 500,
+                "message": "文件不存在",
+                "content": False
+            }
+            return Response(res, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class FileView(APIView):
     def post(self, request):
@@ -109,6 +133,8 @@ class FileView(APIView):
         return Response(res, status=status.HTTP_200_OK)
     
     def put(self, request):
+        """文件修改
+        """
         pass
 
     def delete(self, request):
@@ -117,6 +143,7 @@ class FileView(APIView):
         file = File.objects.get(pk=request.data.get("id"))
         if file is not None:
             os.remove(file.path)
+            file.delete()
             res = {
                 "status": 200,
                 "message": "删除成功"
