@@ -157,22 +157,9 @@ class FileView(APIView):
         with open(path, "wb+") as destination:
             for chunk in file.chunks():
                 destination.write(chunk)
-
-        dumped_file = pd.read_csv(path)      
-        row, column = dumped_file.shape
-
-        File.objects.create(
-            path=path,
-            description="test",
-            name=file.name,
-            row=row,
-            column=column,
-            created=timezone.now()
-        ).save()
-
         res = {
             "status": 200,
-            "message": "查询成功",
+            "message": "上传成功",
             "content": True
         }
         return Response(res, status=status.HTTP_200_OK)
@@ -185,19 +172,65 @@ class FileView(APIView):
     def delete(self, request):
         """文件删除
         """
-        file = File.objects.get(pk=request.data.get("id"))
-        print(file)
-        if file is not None:
-            os.remove(file.path)
-            file.delete()
-            res = {
-                "status": 200,
-                "message": "删除成功"
-            }
-            return Response(res, status=status.HTTP_200_OK)
+        id = request.data.get("id")
+        if id is not None:
+            file = File.objects.get(pk=id)
+
+            print(file)
+            if file is not None:
+                os.remove(file.path)
+                file.delete()
+                res = {
+                    "status": 200,
+                    "message": "删除成功"
+                }
+                return Response(res, status=status.HTTP_200_OK)
+            else:
+                res = {
+                    "status": 500,
+                    "message": "文件不存在",
+                }
+                return Response(res, status=status.HTTP_400_BAD_REQUEST)
         else:
-            res = {
-                "status": 500,
-                "message": "文件不存在",
-            }
-            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+            # 在数据集记录未插入数据库之前，使用文件名删除暂存区的文件
+            name = request.data.get("name")
+            try:
+                # 这一步有可能造成目录遍历删除任意文件，但是业务非要这么做没办法
+                path = './upload/'+name
+                os.remove(path)
+                res = {
+                    "status": 200,
+                    "message": "删除成功"
+                }
+                return Response(res, status=status.HTTP_200_OK)
+            except:
+                res = {
+                    "status": 500,
+                    "message": "文件不存在"
+                }
+                return Response(res, status=status.HTTP_400_BAD_REQUEST)
+            
+class InsertView(APIView):
+    """将数据集记录插入至数据库中
+    """
+    def post(request):
+        name = request.data.get("name")
+        path = "./upload/"
+        dumped_file = pd.read_csv(path)      
+        row, column = dumped_file.shape
+
+        File.objects.create(
+            path=path,
+            description=request.data.get("description"),
+            name=name,
+            row=row,
+            column=column,
+            created=timezone.now()
+        ).save()
+
+        res = {
+            "status": 200,
+            "message": "插入成功",
+            "content": True
+        }
+        return Response(res, status=status.HTTP_200_OK)
