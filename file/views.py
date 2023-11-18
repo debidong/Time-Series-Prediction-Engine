@@ -1,11 +1,14 @@
 from rest_framework.views import APIView, Response, status
+from django.core.paginator import Paginator
+from django.utils import timezone
 import os
 import pandas as pd
 import datetime
 
 from .storage import is_allowed_file, is_duplicate_name, UPLOAD_FOLDER
 from .models import File
-from django.core.paginator import Paginator
+from analysis.views import analyze_csv
+
 
 class TableView(APIView):
     def post(self, request):
@@ -34,7 +37,7 @@ class TableView(APIView):
                         "value": "rowCount"
                     },
                     {
-                    "name": "字段数",
+                        "name": "字段数",
                         "value": "fieldCount"
                     },
                     {
@@ -67,23 +70,65 @@ class GetFileView(APIView):
     def post(self, request):
         """解析单个文件
         """
+        
         file = File.objects.get(pk=request.data.get("id")) or File.objects.get(name=request.data.get("name"))
+        
         if file is not None:
-            path = file.path
-            dumped_file = pd.read_csv(path)
-            res = {
-                "status": 200,
-                "message": "查询成功",
-                "content": {
-                    "columns": [],
-                    "data": []
+            result = analyze_csv(file.path)
+            res = {"message": "查询成功", "status": 200, "content": {
+                "columns": [
+                    {
+                        "name": "序号",
+                        "value": "id"
+                    },
+                    {
+                        "name": "字段名称",
+                        "value": "columnName"
+                    },
+                    {
+                        "name": "数据类型",
+                        "value": "dataType"
+                    },
+                    {
+                        "name": "最小值",
+                        "value": "min"
+                    },
+                    {
+                        "name": "最大值",
+                        "value": "max"
+                    },
+                    {
+                        "name": "示例值",
+                        "value": "exampleData"
+                    },
+                ],
+                "data": [],
                 }
             }
-            columns = dumped_file.columns.to_list()
-            res["content"]["columns"] = columns
-            for column in columns:
-                res["content"]["data"].append(dumped_file[column].to_list())
-                return Response(res, status=status.HTTP_200_OK)
+            for item in result:
+                res['content']['data'].append(item)
+        #     dumped_file = pd.read_csv(path)
+        #     res = {
+        #         "status": 200,
+        #         "message": "查询成功",
+        #         "content": {
+        #             "columns": [],
+        #             "data": [],
+        #         }
+        #     }
+        #     columns = dumped_file.columns.to_list()
+        #     for column in columns:
+        #         res["content"]["columns"].append({
+        #             "name": column,
+        #             "value": column
+        #         })
+        #     for _, row in dumped_file.iterrows():
+        #         added = {}
+        #         for col in columns:
+        #             added[col] = row[col]
+        #         res["content"]["data"].append(added)
+        #     print(res)
+            return Response(res, status=status.HTTP_200_OK)
         else:
             res = {
                 "status": 500,
@@ -122,7 +167,7 @@ class FileView(APIView):
             name=file.name,
             row=row,
             column=column,
-            created=datetime.datetime.now()
+            created=timezone.now()
         ).save()
 
         res = {
@@ -141,6 +186,7 @@ class FileView(APIView):
         """文件删除
         """
         file = File.objects.get(pk=request.data.get("id"))
+        print(file)
         if file is not None:
             os.remove(file.path)
             file.delete()

@@ -8,4 +8,4 @@ class File(models.Model):
     name = models.CharField(max_length=128)
     row = models.IntegerField()
     column = models.IntegerField()
-    created = models.TimeField()
+    created = models.DateTimeField()

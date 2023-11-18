@@ -13,7 +13,7 @@ class File(models.Model):
     layers = models.IntegerField()
     learningRate = models.FloatField()
     neurons = models.IntegerField()
-    round = models.IntegerField()
+    rounds = models.IntegerField()
     batchSize = models.FloatField()
 
     optimization = models.CharField(max_length=16)

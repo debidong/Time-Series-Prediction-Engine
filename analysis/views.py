@@ -20,8 +20,6 @@ def analyze_csv(file_path):
     df = pd.read_csv(file_path)
     global current_file_row, current_file_column
     current_file_row, current_file_column = df.shape
-    print("行数：" + str(current_file_row))
-    print("列数:" + str(current_file_column))
     # 存放所有列的分析结果
     all_columns_analysis = []
     # 从数据框中随机选择一个实例值
