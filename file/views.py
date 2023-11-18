@@ -213,9 +213,9 @@ class FileView(APIView):
 class InsertView(APIView):
     """将数据集记录插入至数据库中
     """
-    def post(request):
+    def post(self, request):
         name = request.data.get("name")
-        path = "./upload/"
+        path = "./upload/"+name
         dumped_file = pd.read_csv(path)      
         row, column = dumped_file.shape
 
