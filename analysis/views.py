@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 
 from .models import Algorithm
 from file.models import File
+from .lib.run import train
 
 class GetAlgorithmView(APIView):
     """查询全部模型及算法
@@ -158,7 +159,23 @@ def analyze_csv(file_path):
 
 class TrainingView(APIView):
     def post(self, request):
-        pass
+        algo: Algorithm = File.objects.get(pk=request.data.get("algo"))
+        if algo is not None:
+            # 后台进行训练
+            train(algo.dataset, algo)
+            res = {
+                "status": 200,
+                "message": "提交成功",
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        else: 
+            res = {
+                "status": 500,
+                "content": "算法不存在"
+            }
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class ResultView(APIView):
     def post(self, request):

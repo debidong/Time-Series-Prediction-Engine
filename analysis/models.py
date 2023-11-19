@@ -1,6 +1,6 @@
 from django.db import models
 from file.models import File
-
+from background_task import background
 
 # Create your models here.
 
@@ -36,7 +36,7 @@ class Algorithm(models.Model):
     layers = models.IntegerField()
     learningRate = models.FloatField()
     neurons = models.IntegerField()
-    rounds = models.IntegerField()
+    epoch = models.IntegerField()
     batchSize = models.FloatField()
 
     optimization = models.CharField(max_length=16)
@@ -46,3 +46,13 @@ class Algorithm(models.Model):
     target = models.CharField(max_length=128)
 
     status = models.CharField(max_length=11, choices=STATUS, default="INI")
+
+class Result(models.Model):
+    algo = models.ForeignKey(to=Algorithm)
+    # 前100个预测数据与真实数据的差异
+    difference = models.CharField(max_length=32)
+    # 训练损失
+    loss = models.CharField(max_length=32)
+    mse = models.FloatField()
+    rmse = models.FloatField()
+    mae = models.FloatField()
