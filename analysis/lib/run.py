@@ -1,9 +1,13 @@
 import time
 import numpy as np
 import pandas as pd
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import torch
 from torch import nn
+from torch.utils.data import TensorDataset, DataLoader
+import tqdm
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
 
 from .models import FullyConnectedNetwork, LSTMNetwork
 
@@ -20,7 +24,7 @@ def create_optimizer(optimizer_name, model_parameters, lr=0.01):
         raise ValueError(f"Unsupported optimizer: {optimizer_name}")
     return optimizer
 
-def create_network(network_type, input_size, hidden_sizes, output_size, training_window):
+def create_network(network_type: str, input_size, hidden_sizes, output_size, training_window):
     network_type = network_type.lower()
     if network_type == 'mlp':
         network = FullyConnectedNetwork(input_size * training_window, hidden_sizes, output_size)
@@ -62,7 +66,7 @@ def main(network_type, optimize_method, layer, hidden_state, learning_rate, trai
     # 训练
     loss_function = nn.MSELoss()
     optimizer = create_optimizer(optimizer_name=optimize_method, model_parameters=model.parameters(), lr=learning_rate)
-    for epoch in tqdm(range(training_epoch)):
+    for _ in tqdm(range(training_epoch)):
         model.train()
         for batch_X, batch_y in train_loader:
             optimizer.zero_grad()
