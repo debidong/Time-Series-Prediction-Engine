@@ -9,7 +9,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import tqdm
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from background_task import background
+from celery import shared_task
 
 from .models import FullyConnectedNetwork, LSTMNetwork
 from analysis.models import Algorithm, Result
@@ -46,7 +46,7 @@ def create_network(network_type: str, input_size, hidden_sizes, output_size, tra
         raise ValueError(f"Unsupported network: {network_type}")
     return network
 
-@background(schedule=0)
+@shared_task
 def train(dataset: File, algo: Algorithm, training_window=50):
     algo.status = "ING"
     selected_features = pd.read_csv(dataset.path).columns.to_list() #用来预测目标选择的特征

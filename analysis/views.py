@@ -162,7 +162,7 @@ class TrainingView(APIView):
         algo: Algorithm = File.objects.get(pk=request.data.get("algo"))
         if algo is not None:
             # 后台进行训练
-            train(algo.dataset, algo)
+            train.delay(algo.dataset, algo)
             res = {
                 "status": 200,
                 "message": "提交成功",

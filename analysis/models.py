@@ -1,8 +1,6 @@
 from django.db import models
 from file.models import File
-from background_task import background
 
-# Create your models here.
 
 # Page1：新增算法
 # 模型名称
@@ -48,7 +46,7 @@ class Algorithm(models.Model):
     status = models.CharField(max_length=11, choices=STATUS, default="INI")
 
 class Result(models.Model):
-    algo = models.ForeignKey(to=Algorithm)
+    algo = models.ForeignKey(to=Algorithm, on_delete=models.CASCADE)
     # 前100个预测数据与真实数据的差异
     difference = models.CharField(max_length=32)
     # 训练损失
