@@ -41,6 +41,7 @@ class Algorithm(models.Model):
 
     verificationRate = models.FloatField()
     dataset = models.ForeignKey(to=File, related_name="dataset" ,on_delete=models.CASCADE)
+    selected = models.JSONField()
     target = models.CharField(max_length=128)
 
     status = models.CharField(max_length=11, choices=STATUS, default="INI")
