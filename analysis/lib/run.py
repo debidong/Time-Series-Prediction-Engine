@@ -1,4 +1,5 @@
 import time
+import json
 
 import numpy as np
 import pandas as pd
@@ -6,7 +7,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
-import tqdm
+
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from celery import shared_task
@@ -47,9 +48,11 @@ def create_network(network_type: str, input_size, hidden_sizes, output_size, tra
     return network
 
 @shared_task
-def train(dataset: File, algo: Algorithm, training_window=50):
+def train(pk: int, training_window=50):
+    algo = Algorithm.objects.get(pk=pk)
+    dataset = algo.dataset
     algo.status = "ING"
-    selected_features = pd.read_csv(dataset.path).columns.to_list() #用来预测目标选择的特征
+    selected_features = json.loads(algo.selected)
     data = pd.read_csv(dataset.path) #数据集路径
     training_goal = data[algo.target].values #将目标从数据集中抽取出来
     training_features = data[selected_features].values #将特征从数据集中抽取出来
@@ -67,26 +70,39 @@ def train(dataset: File, algo: Algorithm, training_window=50):
     Y = torch.tensor(np.array(Y, dtype=np.float32))
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=algo.verificationRate, random_state=42)
 
+    
+    # 将数据移动到GPU上
+    X_test = X_test.to('cuda')
+    Y_test = Y_test.to('cuda')
+    X_train = X_train.to('cuda')
+    Y_train = Y_train.to('cuda')
+
     train_dataset = TensorDataset(X_train, Y_train)
     # 创建DataLoader
     train_loader = DataLoader(train_dataset, batch_size=algo.batchSize, shuffle=True, num_workers=4)
+    # train_loader = DataLoader(train_dataset, batch_size=algo.batchSize, shuffle=True, num_workers=4, pin_memory=True)
+
 
     input_dim = training_features_normalized.shape[1]
     hidden_dim = 50
     #model = LSTMModel(input_dim, hidden_dim)
     #model = LinearModel(input_dim * train_window, hidden_dim)
     model = create_network(algo.neuralNetwork, input_dim, [algo.neurons], 1, training_window)
+    model = model.to('cuda')
+
+
     # 训练
     loss_function = nn.MSELoss()
     optimizer = create_optimizer(optimizer_name=algo.optimization, model_parameters=model.parameters(), lr=algo.learningRate)
+    epoches = algo.epoch
+    algo.save()
     
-    
-    # 使用tqdm在终端中展示训练进度
     # 使用epoch / algo.epoch在前端中展示训练进度
-
-    for epoch in tqdm(range(algo.epoch)):
+    for epoch in range(epoches):
         model.train()
         for batch_X, batch_y in train_loader:
+            batch_X = batch_X.to('cuda')
+            batch_y = batch_y.to('cuda')
             optimizer.zero_grad()
             Y_pred = model(batch_X)
             loss = loss_function(Y_pred, batch_y)
@@ -135,4 +151,5 @@ def train(dataset: File, algo: Algorithm, training_window=50):
                 )
     result.save()
     algo.status = "FIN"
+    algo.save()
     return 0

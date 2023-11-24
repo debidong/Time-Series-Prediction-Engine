@@ -90,7 +90,7 @@ class AlgorithmView(APIView):
                 optimization = request.data.get("optimization"),
                 selected = request.data.get("selected"),
                 target = request.data.get("target"),
-                verificationRate = request.data("verificationRate"),
+                verificationRate = request.data.get("verificationRate"),
                 dataset = dataset,
             )
             algo.save()
@@ -160,10 +160,10 @@ def analyze_csv(file_path):
 
 class TrainingView(APIView):
     def post(self, request):
-        algo: Algorithm = File.objects.get(pk=request.data.get("algo"))
+        algo: Algorithm = Algorithm.objects.get(pk=request.data.get("algo"))
         if algo is not None:
             # 后台进行训练
-            train.delay(algo.dataset, algo)
+            train.delay(algo.pk)
             res = {
                 "status": 200,
                 "message": "提交成功",

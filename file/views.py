@@ -107,27 +107,6 @@ class GetFileView(APIView):
             }
             for item in result:
                 res['content']['data'].append(item)
-        #     dumped_file = pd.read_csv(path)
-        #     res = {
-        #         "status": 200,
-        #         "message": "查询成功",
-        #         "content": {
-        #             "columns": [],
-        #             "data": [],
-        #         }
-        #     }
-        #     columns = dumped_file.columns.to_list()
-        #     for column in columns:
-        #         res["content"]["columns"].append({
-        #             "name": column,
-        #             "value": column
-        #         })
-        #     for _, row in dumped_file.iterrows():
-        #         added = {}
-        #         for col in columns:
-        #             added[col] = row[col]
-        #         res["content"]["data"].append(added)
-        #     print(res)
             return Response(res, status=status.HTTP_200_OK)
         else:
             res = {
@@ -159,15 +138,6 @@ class FileView(APIView):
                 destination.write(chunk)
 
         row, column = pd.read_csv(path).shape
-        File.objects.create(
-            path=path,
-            description="test",
-            name=file.name,
-            row=row,
-            column=column,
-            created=datetime.datetime.now()
-        ).save()
-        
         res = {
             "status": 200,
             "message": "上传成功",

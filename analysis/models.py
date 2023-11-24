@@ -35,7 +35,7 @@ class Algorithm(models.Model):
     learningRate = models.FloatField()
     neurons = models.IntegerField()
     epoch = models.IntegerField()
-    batchSize = models.FloatField()
+    batchSize = models.IntegerField()
 
     optimization = models.CharField(max_length=16)
 
