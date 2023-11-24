@@ -76,7 +76,7 @@ class AlgorithmView(APIView):
         '''新增模型和算法
         '''
         # 未对算法/target等进行进一步验证，日后可进行完善
-        dataset = File.objects.get(pk=request.data.get(dataset))
+        dataset = File.objects.get(pk=request.data.get("dataset"))
         if dataset is not None:
             algo = Algorithm(
                 description = request.data.get("description"),

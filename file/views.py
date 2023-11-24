@@ -157,6 +157,17 @@ class FileView(APIView):
         with open(path, "wb+") as destination:
             for chunk in file.chunks():
                 destination.write(chunk)
+
+        row, column = pd.read_csv(path).shape
+        File.objects.create(
+            path=path,
+            description="test",
+            name=file.name,
+            row=row,
+            column=column,
+            created=datetime.datetime.now()
+        ).save()
+        
         res = {
             "status": 200,
             "message": "上传成功",
