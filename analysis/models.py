@@ -55,3 +55,5 @@ class Result(models.Model):
     mse = models.FloatField()
     rmse = models.FloatField()
     mae = models.FloatField()
+    # 训练好的模型
+    model = models.CharField(max_length=128)
