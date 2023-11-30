@@ -45,13 +45,13 @@ class GetAlgorithmView(APIView):
                         "value": "target"
                     },
                     {
-                        "name": "训练状态",
-                        "value": "status",
-                    },
-                    {
                         "name": "操作",
                         "value": "operation",
                         "slot": True
+                    },
+                    {
+                        "name": "训练状态",
+                        "value": "status",
                     },
                     {
                         "name": "训练进度",
@@ -124,7 +124,7 @@ class AlgorithmView(APIView):
     def delete(self, request):
         """删除模型及算法
         """
-        algo = Algorithm(pk=id)
+        algo = Algorithm(pk=request.data.get("id"))
         if algo is not None:
             algo.delete()
             res = {
@@ -197,7 +197,7 @@ class ResultView(APIView):
     def post(self, request):
         algo: Algorithm = Algorithm.objects.get(pk=request.data.get("id"))
         if algo is not None:
-            result = Result.objects.get(algorithm=algo)
+            result = Result.objects.get(algo=algo)
             if result is not None:
                 res = {
                     "status": 200,

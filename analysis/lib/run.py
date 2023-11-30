@@ -103,6 +103,16 @@ def train(pk: int, training_window=50):
     epoches = algo.epoch
     algo.save()
     
+    # 训练开始时发送一回0%进度
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {
+            'type': 'send_training_progress',
+            'algoID': pk,
+            'progress': 0.0,
+        }
+    )
+
     # 使用epoch / algo.epoch在前端中展示训练进度
     for epoch in range(epoches):
         model.train()
