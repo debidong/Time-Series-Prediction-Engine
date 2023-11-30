@@ -3,9 +3,10 @@ import numpy as np
 from rest_framework.views import APIView, Response, status
 from django.core.paginator import Paginator
 
-from .models import Algorithm
+from .models import Algorithm, Result
 from file.models import File
 from .lib.run import train
+from utils.db import redis_conn
 
 class GetAlgorithmView(APIView):
     """查询全部模型及算法
@@ -51,6 +52,10 @@ class GetAlgorithmView(APIView):
                         "name": "操作",
                         "value": "operation",
                         "slot": True
+                    },
+                    {
+                        "name": "训练进度",
+                        "value": "progress",
                     }
                     ],
                 "data": [],
@@ -60,6 +65,16 @@ class GetAlgorithmView(APIView):
         }
 
         for algo in algos:
+            if redis_conn.get(algo.pk) is not None:
+                progress = redis_conn.get(algo.pk).decode()
+                res["content"]["data"].append({
+                    "progress": progress
+                })
+            else:
+                res["content"]["data"].append({
+                    "progress": "0"
+                })
+            
             res["content"]["data"].append({
                 "id": algo.pk,
                 "modelName": algo.name,
@@ -160,7 +175,7 @@ def analyze_csv(file_path):
 
 class TrainingView(APIView):
     def post(self, request):
-        algo: Algorithm = Algorithm.objects.get(pk=request.data.get("algo"))
+        algo: Algorithm = Algorithm.objects.get(pk=request.data.get("id"))
         if algo is not None:
             # 后台进行训练
             train.delay(algo.pk)
@@ -180,4 +195,29 @@ class TrainingView(APIView):
 
 class ResultView(APIView):
     def post(self, request):
-        pass
+        algo: Algorithm = Algorithm.objects.get(pk=request.data.get("id"))
+        if algo is not None:
+            result = Result.objects.get(algorithm=algo)
+            if result is not None:
+                res = {
+                    "status": 200,
+                    "message": "查询成功",
+                    "mse": result.mse,
+                    "rmse": result.rmse,
+                    "mae": result.mae,
+                    "difference": result.difference,
+                    "loss": result.loss,
+                }
+                return Response(res, status=status.HTTP_200_OK)
+            else:
+                res = {
+                    "status": 500,
+                    "message": "训练未完成"
+                }
+                return Response(res, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            res = {
+                "status": 500,
+                "message": "算法不存在"
+            }
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)

@@ -118,18 +118,27 @@ def train(pk: int, training_window=50):
 
             del batch_X, batch_y, Y_pred
 
-            progress = epoch / algo.epoch
-            redis_conn.set(algo.pk, progress)
-            async_to_sync(channel_layer.group_send)(
-                group_name,
-                {
-                    'type': 'send.training.progress',
-                    'algoID': pk,
-                    'progress': progress,
-                }
-            )
+        progress = epoch / algo.epoch
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                'type': 'send_training_progress',
+                'algoID': pk,
+                'progress': progress,
+            }
+        )
+        redis_conn.set(pk, progress)
         torch.cuda.empty_cache()
-    redis_conn.set(algo.pk, 1.0)
+    # 训练结束后发送一回100%进度
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {
+            'type': 'send_training_progress',
+            'algoID': pk,
+            'progress': 1.0,
+        }
+    )
+    redis_conn.set(pk, progress)
     model.eval()
 
     with torch.no_grad():
@@ -178,4 +187,5 @@ def train(pk: int, training_window=50):
     result.save()
     algo.status = "FIN"
     algo.save()
+    redis_conn.delete(pk)
     return 0

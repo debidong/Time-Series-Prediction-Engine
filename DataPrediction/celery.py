@@ -1,4 +1,5 @@
 # celery.py
+# run on Windows: celery -A DataPrediction worker --loglevel=info --pool=solo  --concurrency=1
 
 import os
 from celery import Celery
