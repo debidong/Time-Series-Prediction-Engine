@@ -65,17 +65,7 @@ class GetAlgorithmView(APIView):
         }
 
         for algo in algos:
-            if redis_conn.get(algo.pk) is not None:
-                progress = redis_conn.get(algo.pk).decode()
-                res["content"]["data"].append({
-                    "progress": progress
-                })
-            else:
-                res["content"]["data"].append({
-                    "progress": "0"
-                })
-            
-            res["content"]["data"].append({
+            a = {
                 "id": algo.pk,
                 "modelName": algo.name,
                 "modelDescription": algo.description,
@@ -83,7 +73,14 @@ class GetAlgorithmView(APIView):
                 "neuralNetwork": algo.neuralNetwork,
                 "target": algo.target,
                 "status": algo.status
-            })
+            }
+            if redis_conn.get(algo.pk) is not None:
+                progress = redis_conn.get(algo.pk).decode()
+                a['progress'] = progress
+            else:
+                a['progress'] = 0
+            
+            res["content"]["data"].append(a)
         return Response(res, status=status.HTTP_200_OK)
 
 class AlgorithmView(APIView):
