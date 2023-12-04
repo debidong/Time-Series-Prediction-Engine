@@ -202,11 +202,13 @@ class ResultView(APIView):
                 res = {
                     "status": 200,
                     "message": "查询成功",
-                    "mse": result.mse,
-                    "rmse": result.rmse,
-                    "mae": result.mae,
-                    "difference": result.difference,
-                    "loss": result.loss,
+                    "content": {
+                        "mse": str(result.mse),
+                        "rmse": str(result.rmse),
+                        "mae": str(result.mae),
+                        "difference": result.difference,
+                        "loss": result.loss,
+                    },
                 }
                 return Response(res, status=status.HTTP_200_OK)
             else:
