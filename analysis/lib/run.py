@@ -1,6 +1,7 @@
 import time
 import json
 import os
+import ast
 
 import numpy as np
 import pandas as pd
@@ -93,7 +94,11 @@ def train(pk: int, training_window=50):
     hidden_dim = 50
     #model = LSTMModel(input_dim, hidden_dim)
     #model = LinearModel(input_dim * train_window, hidden_dim)
-    model = create_network(algo.neuralNetwork, input_dim, [algo.neurons], 1, training_window)
+
+    neurons = ast.literal_eval(algo.neurons)
+    neurons = [int(x) for x in neurons]
+    # print(neurons)
+    model = create_network(algo.neuralNetwork, input_dim, neurons, 1, training_window)
     model = model.to('cuda')
 
 
@@ -172,14 +177,15 @@ def train(pk: int, training_window=50):
     plt.title('Actual vs Predicted Values')
     plt.xlabel('Index')
     plt.ylabel('Values')
-    difference_path = './result/compare_' + str(time.time()) + '.png'
+    difference_path = 'result/compare_' + str(time.time()) + '.png'
     plt.savefig(difference_path)
     # 展示损失率
+    plt.clf()
     plt.plot(losses)
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.title('Training Loss')
-    loss_path = './result/training_loss_' + str(time.time()) + '.png'
+    loss_path = 'result/training_loss_' + str(time.time()) + '.png'
     plt.savefig(loss_path)
 
     mse = np.mean((test_predictions - Y_test_actual) ** 2)
@@ -187,8 +193,8 @@ def train(pk: int, training_window=50):
     mae = np.mean(np.abs(test_predictions - Y_test_actual))
     result = Result(
                 algo=algo,
-                difference=difference_path,
-                loss=loss_path,
+                difference='./api/'+difference_path,
+                loss='./api/'+loss_path,
                 mse=mse,
                 rmse=rmse,
                 mae=mae,

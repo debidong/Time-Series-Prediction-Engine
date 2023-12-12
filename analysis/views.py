@@ -1,3 +1,5 @@
+import os
+from django.http import FileResponse
 import pandas as pd
 import numpy as np
 from rest_framework.views import APIView, Response, status
@@ -20,10 +22,6 @@ class GetAlgorithmView(APIView):
             "content": {
                 "columns": [
                     {
-                        "name": "序号",
-                        "value": "id"
-                    },
-                    {
                         "name": "模型名称",
                         "value": "modelName"
                     },
@@ -43,11 +41,6 @@ class GetAlgorithmView(APIView):
                     {
                         "name": "预测目标",
                         "value": "target"
-                    },
-                    {
-                        "name": "操作",
-                        "value": "operation",
-                        "slot": True
                     },
                     {
                         "name": "训练状态",
@@ -191,6 +184,17 @@ class TrainingView(APIView):
 
 
 class ResultView(APIView):
+    def get(self, request, image):
+        print("--", os.getcwd())
+        image_path = os.path.join('result', image)
+
+        print(image_path)
+        if os.path.exists(image_path):
+            response = FileResponse(open(image_path, 'rb'), content_type='image/png')
+            response['Content-Disposition'] = f'inline; filename={image}'
+            return response
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
     def post(self, request):
         algo: Algorithm = Algorithm.objects.get(pk=request.data.get("id"))
         if algo is not None:

@@ -33,7 +33,7 @@ class Algorithm(models.Model):
     neuralNetwork = models.CharField(max_length=16)
     layers = models.IntegerField()
     learningRate = models.FloatField()
-    neurons = models.IntegerField()
+    neurons = models.CharField(max_length=256)
     epoch = models.IntegerField()
     batchSize = models.IntegerField()
 
