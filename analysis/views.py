@@ -99,12 +99,19 @@ class AlgorithmView(APIView):
                 verificationRate = request.data.get("verificationRate"),
                 dataset = dataset,
             )
-            algo.save()
-            res = {
-                "status": 200,
-                "content": "上传成功"
-            }
-            return Response(res, status=status.HTTP_200_OK)
+            try:
+                algo.save()
+                res = {
+                    "status": 200,
+                    "content": "上传成功"
+                }
+                return Response(res, status=status.HTTP_200_OK)
+            except:
+                res = {
+                    "status": 500,
+                    "content": "模型名称重复"
+                }
+                return Response(res, status=status.HTTP_400_BAD_REQUEST)
         else:
             res = {
                 "status": 500,

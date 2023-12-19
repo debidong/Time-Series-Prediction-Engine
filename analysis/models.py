@@ -27,7 +27,7 @@ class Algorithm(models.Model):
     '''算法模型
     '''
     description = models.CharField(max_length=128)
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128, unique=True)
     
     neuralNetwork = models.CharField(max_length=16)
     layers = models.IntegerField()

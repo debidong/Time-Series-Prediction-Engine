@@ -58,9 +58,7 @@ def train(pk: int, training_window=50):
 
     algo = Algorithm.objects.get(pk=pk)
     dataset = algo.dataset
-    algo.status = "ING"
 
-    
     selected_features = json.loads(algo.selected)
     data = pd.read_csv(dataset.path) #数据集路径
     training_goal = data[algo.target].values #将目标从数据集中抽取出来
@@ -105,6 +103,7 @@ def train(pk: int, training_window=50):
     loss_function = nn.MSELoss()
     optimizer = create_optimizer(optimizer_name=algo.optimization, model_parameters=model.parameters(), lr=algo.learningRate)
     epoches = algo.epoch
+    algo.status = "ING"
     algo.save()
     
     # 训练开始时发送一回0%进度
@@ -177,7 +176,7 @@ def train(pk: int, training_window=50):
     plt.title('Actual vs Predicted Values')
     plt.xlabel('Index')
     plt.ylabel('Values')
-    difference_path = 'result/compare_' + str(time.time()) + '.png'
+    difference_path = 'result/compare_' + algo.name + '.png'
     plt.savefig(difference_path)
     # 展示损失率
     plt.clf()
@@ -185,7 +184,7 @@ def train(pk: int, training_window=50):
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.title('Training Loss')
-    loss_path = 'result/training_loss_' + str(time.time()) + '.png'
+    loss_path = 'result/training_loss_' + algo.name + '.png'
     plt.savefig(loss_path)
 
     mse = np.mean((test_predictions - Y_test_actual) ** 2)
