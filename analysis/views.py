@@ -120,12 +120,10 @@ class AlgorithmView(APIView):
         if algo is not None and result is not None:
             print(algo)
             # 删除神经网络模型
-            # img_path = [result.difference, result.loss]
-            # for p in img_path:
-            #     os.remove(p[6:])
+            img_path = [result.difference, result.loss]
+            for p in img_path:
+                os.remove(p[6:])
             model_name = algo.name + '.pth'
-            print("name", algo.name)
-            # os.remove(os.path.join('torch_models', model_name))
             os.remove('./torch_models/'+model_name)
             # 删除数据库内算法记录
             algo.delete()
