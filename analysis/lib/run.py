@@ -1,4 +1,3 @@
-import time
 import json
 import os
 import ast
@@ -51,6 +50,7 @@ def create_network(network_type: str, input_size, hidden_sizes, output_size, tra
         raise ValueError(f"Unsupported network: {network_type}")
     return network
 
+# TODO: 添加参数异常处理
 @shared_task
 def train(pk: int, training_window=50):
     channel_layer = get_channel_layer()
@@ -77,23 +77,25 @@ def train(pk: int, training_window=50):
     Y = torch.tensor(np.array(Y, dtype=np.float32))
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=algo.verificationRate, random_state=42)
 
-    
+    device = ''
+    cuda_available = torch.cuda.is_available()
+    if cuda_available:
+        device = 'cuda'
+    else:
+        device = 'cpu'
+
     # 将数据移动到GPU上
-    X_test = X_test.to('cuda')
-    Y_test = Y_test.to('cuda')
-    X_train = X_train.to('cuda')
-    Y_train = Y_train.to('cuda')
+    X_test = X_test.to(device)
+    Y_test = Y_test.to(device)
+    X_train = X_train.to(device)
+    Y_train = Y_train.to(device)
 
     train_dataset = TensorDataset(X_train, Y_train)
     # 创建DataLoader
     train_loader = DataLoader(train_dataset, batch_size=algo.batchSize, shuffle=True, num_workers=0)
-    # train_loader = DataLoader(train_dataset, batch_size=algo.batchSize, shuffle=True, num_workers=4, pin_memory=True)
 
     input_dim = training_features_normalized.shape[1]
     hidden_dim = 50
-    #model = LSTMModel(input_dim, hidden_dim)
-    #model = LinearModel(input_dim * train_window, hidden_dim)
-
     neurons = ast.literal_eval(algo.neurons)
     neurons = [int(x) for x in neurons]
     model = create_network(algo.neuralNetwork, input_dim, neurons, 1, training_window)
@@ -120,8 +122,8 @@ def train(pk: int, training_window=50):
     for epoch in range(epoches):
         model.train()
         for batch_X, batch_y in train_loader:
-            batch_X = batch_X.to('cuda')
-            batch_y = batch_y.to('cuda')
+            batch_X = batch_X.to(device)
+            batch_y = batch_y.to(device)
             optimizer.zero_grad()
             Y_pred = model(batch_X)
             loss = loss_function(Y_pred, batch_y)
