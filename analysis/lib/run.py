@@ -59,6 +59,8 @@ def train(pk: int, training_window=50):
     algo = Algorithm.objects.get(pk=pk)
     dataset = algo.dataset
     algo.status = "ING"
+
+    
     selected_features = json.loads(algo.selected)
     data = pd.read_csv(dataset.path) #数据集路径
     training_goal = data[algo.target].values #将目标从数据集中抽取出来
@@ -89,7 +91,6 @@ def train(pk: int, training_window=50):
     train_loader = DataLoader(train_dataset, batch_size=algo.batchSize, shuffle=True, num_workers=0)
     # train_loader = DataLoader(train_dataset, batch_size=algo.batchSize, shuffle=True, num_workers=4, pin_memory=True)
 
-
     input_dim = training_features_normalized.shape[1]
     hidden_dim = 50
     #model = LSTMModel(input_dim, hidden_dim)
@@ -97,10 +98,8 @@ def train(pk: int, training_window=50):
 
     neurons = ast.literal_eval(algo.neurons)
     neurons = [int(x) for x in neurons]
-    # print(neurons)
     model = create_network(algo.neuralNetwork, input_dim, neurons, 1, training_window)
     model = model.to('cuda')
-
 
     # 训练
     loss_function = nn.MSELoss()
@@ -171,6 +170,7 @@ def train(pk: int, training_window=50):
 
     # 保持两张图片和MSE,RMSE,MAE三个数值
     # 展示前100个预测数据与真实数据的差异
+    plt.clf()
     plt.plot(test_predictions[0:100], label='Predicted Values', color='blue', linestyle='dashed')
     plt.plot(Y_test_actual[0:100], label='Actual values', color='grey')
     plt.legend()

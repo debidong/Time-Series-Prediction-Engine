@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from rest_framework.views import APIView, Response, status
 from django.core.paginator import Paginator
+import re
 
 from .models import Algorithm, Result
 from file.models import File
@@ -114,8 +115,19 @@ class AlgorithmView(APIView):
     def delete(self, request):
         """删除模型及算法
         """
-        algo = Algorithm(pk=request.data.get("id"))
-        if algo is not None:
+        algo = Algorithm.objects.get(pk=request.data.get("id"))
+        result = Result.objects.get(algo=algo)
+        if algo is not None and result is not None:
+            print(algo)
+            # 删除神经网络模型
+            # img_path = [result.difference, result.loss]
+            # for p in img_path:
+            #     os.remove(p[6:])
+            model_name = algo.name + '.pth'
+            print("name", algo.name)
+            # os.remove(os.path.join('torch_models', model_name))
+            os.remove('./torch_models/'+model_name)
+            # 删除数据库内算法记录
             algo.delete()
             res = {
                 "status": 200,
@@ -128,6 +140,7 @@ class AlgorithmView(APIView):
                 "content": "数据集不存在"
             }
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 def analyze_csv(file_path):
@@ -167,7 +180,7 @@ class TrainingView(APIView):
     def post(self, request):
         algo: Algorithm = Algorithm.objects.get(pk=request.data.get("id"))
         if algo is not None:
-            # 后台进行训练
+            # 搭配celery在后台进行训练
             train.delay(algo.pk)
             res = {
                 "status": 200,

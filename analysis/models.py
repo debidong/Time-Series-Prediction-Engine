@@ -1,7 +1,6 @@
 from django.db import models
 from file.models import File
 
-
 # Page1：新增算法
 # 模型名称
 # 模型描述
@@ -48,10 +47,11 @@ class Algorithm(models.Model):
 
 class Result(models.Model):
     algo = models.ForeignKey(to=Algorithm, on_delete=models.CASCADE)
-    # 前100个预测数据与真实数据的差异
+    # 展示前100个预测数据与真实数据的差异的图片路径
     difference = models.CharField(max_length=32)
-    # 训练损失
+    # 展示训练损失的图片路径
     loss = models.CharField(max_length=32)
+    
     mse = models.FloatField()
     rmse = models.FloatField()
     mae = models.FloatField()
