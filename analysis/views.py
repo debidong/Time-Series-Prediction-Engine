@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 from rest_framework.views import APIView, Response, status
 from django.core.paginator import Paginator
-import re
 
 from .models import Algorithm, Result
 from file.models import File

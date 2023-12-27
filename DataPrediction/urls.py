@@ -24,5 +24,6 @@ urlpatterns = [
     path('api/data/file/', include('file.urls')),
     path('api/data/table', TableView.as_view()),
     path('api/analysis/', include('analysis.urls')),
+    path('api/forecast/', include('forecast.urls')),
     path('result/<image>', ResultView.as_view()),
 ]

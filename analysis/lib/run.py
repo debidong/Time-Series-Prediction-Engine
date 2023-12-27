@@ -17,7 +17,6 @@ from asgiref.sync import async_to_sync
 
 from .models import FullyConnectedNetwork, LSTMNetwork
 from analysis.models import Algorithm, Result
-from file.models import File
 from utils.db import redis_conn
 
 def create_optimizer(optimizer_name, model_parameters, lr=0.01):
