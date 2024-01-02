@@ -1,13 +1,17 @@
+import re
+import ast
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.tsa.ar_model import AutoReg
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.graphics.tsaplots import plot_acf
+from prophet import Prophet
 
 from file.models import File
 
-def AR(pk: int, target, order, window, step):
+def AR(pk: int, target, order, window, step) -> np.ndarray:
     """自回归模型预测时序数据
     pk: 数据集主键
     order: 自回归模型阶数
@@ -25,11 +29,12 @@ def AR(pk: int, target, order, window, step):
     ar_model = AutoReg(training_window, lags=order)
     ar_result = ar_model.fit()
     
-    forcast = ar_result.predict(start=len(training_window), end=len(training_window)+step-1)
-    print(forcast)
-    return 0
+    forecast = ar_result.predict(start=len(training_window), end=len(training_window)+step-1)
+    return forecast
+    # [240.34873895 240.30165088 240.25839607 240.21866248 240.18216345
+    # 240.14863568 240.11783728 240.08954607 240.06355793 240.0396854]
 
-def ARIMA_model(pk: int, target, order, window, step):
+def ARIMA_model(pk: int, target, order, window, step) -> pd.core.series.Series:
     """ARIMA模型预测时序数据
     pk: 数据集主键
     target: 目标变量名称
@@ -39,17 +44,68 @@ def ARIMA_model(pk: int, target, order, window, step):
     """
     file = File.objects.get(pk=pk)
     data = pd.read_csv(file.path)
-    order = tuple(map(int, order.split(',')))
-    order = (1,1,1)
+    order = ast.literal_eval(order)
+    
     window = int(window)
     step = int(step)
+
+    differenced_series = data[target]
     
-    differenced_series = data[target].diff().dropna()
-    
-    arima_model = ARIMA(differenced_series, order=order, seasonal_order=None)
+    for i in order:
+        print(i)
+    arima_model = ARIMA(differenced_series, order=order)
     arima_result = arima_model.fit()
     
     forecast = arima_result.predict(start=len(differenced_series), end=len(differenced_series)+step-1, typ='levels')
+    return forecast
+    # 101236    240.377907
+    # 101237    240.377388
+    # 101238    240.377376
+    # 101239    240.377376
+    # 101240    240.377376
+    # 101241    240.377376
+    # 101242    240.377376
+    # 101243    240.377376
+    # 101244    240.377376
+    # 101245    240.377376
+    # Name: predicted_mean, dtype: float64
     
-    print(forecast)
-    return 0
+
+def Fbprophet(pk: int, target, window, step):
+    window = int(window)
+    step = int(step)
+
+    file = File.objects.get(pk=pk)
+    data = pd.read_csv(file.path)
+    datetime_regex = datetime_regex = r'\b(\d{4}/\d{1,2}/\d{1,2}(?: \d{2}:\d{2}:\d{2})?)|(\d{4}-\d{1,2}-\d{1,2}(?: \d{2}:\d{2}:\d{2})?)\b'
+    matched_column = ""
+    for col in data.columns:
+        if re.search(datetime_regex, str(data[col].iloc[0])):
+            matched_column = col
+            break
+
+    data.rename(columns={
+            matched_column: 'ds',
+            target: 'y'
+        }, inplace=True)
+    
+    training_window = data[['ds', 'y']].tail(window)
+    model = Prophet()
+    model.fit(training_window)
+    future = model.make_future_dataframe(periods=window)
+    forecast = model.predict(future)
+    return forecast
+    #                      ds        trend     yhat_lower  ...  multiplicative_terms_lower  multiplicative_terms_upper         yhat
+    # 0   2023-04-23 08:51:43   239.238079     238.931432  ...                         0.0                         0.0   239.238079
+    # 1   2023-04-23 08:56:43   239.245132     238.939292  ...                         0.0                         0.0   239.245132
+    # 2   2023-04-23 09:01:42   239.252161     238.953928  ...                         0.0                         0.0   239.252161
+    # 3   2023-04-23 09:06:43   239.259238     238.963208  ...                         0.0                         0.0   239.259238
+    # 4   2023-04-23 09:11:43   239.266291     238.973073  ...                         0.0                         0.0   239.266291
+    # ..                  ...          ...            ...  ...                         ...                         ...          ...
+    # 995 2024-09-02 03:11:30  1792.750004 -136788.429805  ...                         0.0                         0.0  1792.750004
+    # 996 2024-09-03 03:11:30  1795.879950 -137293.589742  ...                         0.0                         0.0  1795.879950
+    # 997 2024-09-04 03:11:30  1799.009897 -137750.974159  ...                         0.0                         0.0  1799.009897
+    # 998 2024-09-05 03:11:30  1802.139843 -138180.571122  ...                         0.0                         0.0  1802.139843
+    # 999 2024-09-06 03:11:30  1805.269790 -138647.247467  ...                         0.0                         0.0  1805.269790
+
+    # [1000 rows x 13 columns]
