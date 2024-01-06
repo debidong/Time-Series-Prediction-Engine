@@ -6,10 +6,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.tsa.ar_model import AutoReg
 from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.graphics.tsaplots import plot_acf
 from prophet import Prophet
 
 from file.models import File
+from forecast.models import Result
 
 def AR(pk: int, target, order, window, step) -> np.ndarray:
     """自回归模型预测时序数据
@@ -30,7 +30,19 @@ def AR(pk: int, target, order, window, step) -> np.ndarray:
     ar_result = ar_model.fit()
     
     forecast = ar_result.predict(start=len(training_window), end=len(training_window)+step-1)
-    return forecast
+
+    plt.clf()
+    plt.plot(list(range(len(data), len(data)+step)), forecast, label='Prediction', linestyle='--')
+    plt.plot(list(range(len(data)-window, len(data))), training_window, label='Training Data', linestyle='-')
+    plt.xlabel('Serial')
+    plt.ylabel(target)
+    plt.title('AR Model Prediction')
+    plt.legend()
+
+    path = 'result/forecast_AR_' + file.name + '.png'
+    plt.savefig(path)
+
+    return forecast, len(data)
     # [240.34873895 240.30165088 240.25839607 240.21866248 240.18216345
     # 240.14863568 240.11783728 240.08954607 240.06355793 240.0396854]
 
@@ -45,18 +57,26 @@ def ARIMA_model(pk: int, target, order, window, step) -> pd.core.series.Series:
     file = File.objects.get(pk=pk)
     data = pd.read_csv(file.path)
     order = ast.literal_eval(order)
-    
     window = int(window)
     step = int(step)
 
-    differenced_series = data[target]
-    
-    for i in order:
-        print(i)
-    arima_model = ARIMA(differenced_series, order=order)
+    training_window = data[target].tail(window)
+    arima_model = ARIMA(training_window, order=order)
     arima_result = arima_model.fit()
     
-    forecast = arima_result.predict(start=len(differenced_series), end=len(differenced_series)+step-1, typ='levels')
+    forecast = arima_result.predict(start=len(training_window), end=len(training_window)+step-1, typ='levels')
+    
+    plt.clf()
+    plt.plot(forecast.index, forecast.values, label='Prediction', linestyle='--')
+    plt.plot(list(range(len(data)-window, len(data))), training_window, label='Training Data', linestyle='-')
+    plt.xlabel('Serial')
+    plt.ylabel(target)
+    plt.title('ARIMA Model Prediction')
+    plt.legend()
+
+    path = 'result/forecast_ARIMA_' + file.name + '.png'
+    plt.savefig(path)
+
     return forecast
     # 101236    240.377907
     # 101237    240.377388
@@ -71,7 +91,15 @@ def ARIMA_model(pk: int, target, order, window, step) -> pd.core.series.Series:
     # Name: predicted_mean, dtype: float64
     
 
-def Fbprophet(pk: int, target, window, step):
+def Fbprophet(pk: int, target, window, step, periods, freq) -> pd.core.frame.DataFrame:
+    """Fbprophet模型预测时序数据
+    pk: 数据集主键
+    target: 目标变量名称
+    window: 预测的数据窗口的大小，即用前多少个数据点来构建模型
+    step: 预测数据步长，即使用模型预测后续多少个数据点
+    periods: 预测数据的期数，即使用模型预测后续多少个数据点
+    freq: 预测数据的频率
+    """
     window = int(window)
     step = int(step)
 
@@ -90,10 +118,25 @@ def Fbprophet(pk: int, target, window, step):
         }, inplace=True)
     
     training_window = data[['ds', 'y']].tail(window)
+    
     model = Prophet()
     model.fit(training_window)
-    future = model.make_future_dataframe(periods=window)
-    forecast = model.predict(future)
+    future = model.make_future_dataframe(periods=int(periods), freq=freq)
+    forecast = model.predict(future)[window:window+step]
+
+    training_window['ds'] = pd.to_datetime(training_window['ds'])
+
+    plt.clf()
+    plt.plot(forecast['ds'], forecast['yhat'], label='Prediction', linestyle='--')
+    plt.plot(training_window['ds'], training_window['y'], label='Training Data', linestyle='-')
+    plt.xlabel('Date')
+    plt.ylabel(target)
+    plt.title('Fbprophet Model Prediction')
+    plt.legend()
+
+    path = 'result/forecast_fbprophet_' + file.name + '.png'
+    plt.savefig(path)
+
     return forecast
     #                      ds        trend     yhat_lower  ...  multiplicative_terms_lower  multiplicative_terms_upper         yhat
     # 0   2023-04-23 08:51:43   239.238079     238.931432  ...                         0.0                         0.0   239.238079

@@ -96,6 +96,8 @@ class AlgorithmView(APIView):
                 selected = request.data.get("selected"),
                 target = request.data.get("target"),
                 verificationRate = request.data.get("verificationRate"),
+                window = request.data.get("window"),
+                step = request.data.get("step"),
                 dataset = dataset,
             )
             try:

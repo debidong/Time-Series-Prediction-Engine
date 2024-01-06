@@ -43,6 +43,9 @@ class Algorithm(models.Model):
     selected = models.JSONField()
     target = models.CharField(max_length=128)
 
+    window = models.IntegerField()
+    step = models.IntegerField()
+
     status = models.CharField(max_length=11, choices=STATUS, default="INI")
 
 class Result(models.Model):
