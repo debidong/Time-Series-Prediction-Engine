@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import datetime
 
-from .storage import is_allowed_file, is_duplicate_name, UPLOAD_FOLDER
+from .storage import is_allowed_file, is_duplicate_name, FILE_FOLDER
 from .models import File
 from analysis.views import analyze_csv
 
@@ -132,7 +132,7 @@ class FileView(APIView):
                 "content": False
             }
             return Response(res, status=status.HTTP_200_OK)
-        path = UPLOAD_FOLDER+"/"+file.name
+        path = FILE_FOLDER+"/"+file.name
         with open(path, "wb+") as destination:
             for chunk in file.chunks():
                 destination.write(chunk)

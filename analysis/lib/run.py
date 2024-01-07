@@ -51,13 +51,14 @@ def create_network(network_type: str, input_size, hidden_sizes, output_size, tra
 
 # TODO: 添加参数异常处理
 @shared_task
-def train(pk: int, training_window=50):
+def train(pk: int):
     channel_layer = get_channel_layer()
     group_name = "training_progress"
 
     algo = Algorithm.objects.get(pk=pk)
     dataset = algo.dataset
 
+    training_window = algo.window
     selected_features = json.loads(algo.selected)
     data = pd.read_csv(dataset.path) #数据集路径
     training_goal = data[algo.target].values #将目标从数据集中抽取出来

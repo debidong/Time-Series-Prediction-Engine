@@ -1,13 +1,12 @@
-from datetime import timezone
+from django.utils import timezone
 import os
-import ast
 import pandas as pd
 from rest_framework.views import APIView, Response, status
 from .lib.regression import AR, ARIMA_model, Fbprophet
 from .lib.nn import infer
 from django.core.paginator import Paginator
 
-from file.storage import is_allowed_file, is_duplicate_name, UPLOAD_FOLDER
+from file.storage import is_allowed_file, is_duplicate_name, FILE_FOLDER, FORECAST_FOLDER
 from .models import File
 from analysis.views import analyze_csv
 
@@ -19,11 +18,17 @@ class ARView(APIView):
             target = request.data.get('target')
             window = request.data.get('window')
             step = request.data.get('step')
-            AR(pk, target, order, window, step)
+            _, figure = AR(pk, target, order, window, step)
             res = {
                 "status": 200,
                 "message": "提交成功",
+                "content": {
+                    "figure": './api/' + figure
+                },
             }
+
+            # 删除暂存文件
+            delete_file(pk)
             return Response(res, status=status.HTTP_200_OK)
         # except:
         #     res = {
@@ -39,11 +44,15 @@ class ARIMAView(APIView):
         target = request.data.get('target')
         window = request.data.get('window')
         step = request.data.get('step')
-        ARIMA_model(pk, target, order, window, step)
+        _, figure = ARIMA_model(pk, target, order, window, step)
         res = {
             "status": 200,
-            "content": "提交成功"
+            "content": "提交成功",
+            "content": {
+                    "figure": './api/' + figure
+            },
         }
+        delete_file(pk)
         return Response(res, status=status.HTTP_200_OK)
     
 class FbprophetView(APIView):
@@ -54,46 +63,31 @@ class FbprophetView(APIView):
         step = request.data.get('step')
         periods = request.data.get('periods')
         freq = request.data.get('freq')
-        df = Fbprophet(pk, target, window, step, periods, freq)
-        df = df[['ds', 'yhat']]
+        _, figure = Fbprophet(pk, target, window, step, periods, freq)
         res = {
             "status": 200,
             "message": "提交成功",
             "content": {
-                "columns": [
-                    {
-                        "name": "时间",
-                        "value": "ds"
-                    },
-                    {
-                        "name": "预测值",
-                        "value": "yhat",
-                    }, 
-                    {
-                        "name": "结果图",
-                        "value": "figure"    
-                    }
-                    ],
-                "data": [
-                    # {
-                    #     "ds": df['ds'].tolist(),
-                    #     "yhat": df['yhat'].tolist(),
-                    # }
-                ],
-                "figure": "test",
-                "componentTitle": ""
+                "figure": './api/' + figure
             }
         }
+        delete_file(pk)
         return Response(res, status=status.HTTP_200_OK)
     
 class InferView(APIView):
     def post(self, request):
-        pk_result = request.data.get("pk_result")
+        pk_model = request.data.get("pk_model")
         pk_file = request.data.get("pk_file")
-        features = request.data.get("features")
-        features = ast.literal_eval(features)
-        infer(pk_result, pk_file, features)
-
+        step = request.data.get("step")
+        infer(pk_model, pk_file, step)
+        res = {
+            "status": 200,
+            "message": "提交成功",
+            "content": {
+                "figure": "test"
+            }
+        }
+        return Response(res, status=status.HTTP_200_OK)
 class TableView(APIView):
     def post(self, request):
         '''查询数据库中全部的文件
@@ -131,7 +125,7 @@ class TableView(APIView):
                     {
                         "name": "操作",
                         "value": "operation",
-                        "slot": True
+                        # "slot": True
                     }
                     ],
                 "data": [],
@@ -204,28 +198,40 @@ class FileView(APIView):
     def post(self, request):
         """文件上传
         """
-
         file = request.FILES['file']
         if not (file and is_allowed_file(file.name)):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        if is_duplicate_name(file.name):
+        if is_duplicate_name(file.name, directory_path=FORECAST_FOLDER):
             res = {
                 "status": 500,
                 "message": "存在重复文件",
-                "content": False
+                "content": "false"
             }
             return Response(res, status=status.HTTP_200_OK)
-        path = UPLOAD_FOLDER+"/"+file.name
+
+        path = FORECAST_FOLDER+"/"+file.name
         with open(path, "wb+") as destination:
             for chunk in file.chunks():
                 destination.write(chunk)
 
         row, column = pd.read_csv(path).shape
+        path = FORECAST_FOLDER+"/"+file.name
+        dumped_file = pd.read_csv(path)      
+        row, column = dumped_file.shape
+
+        f = File.objects.create(
+            path=path,
+            name=file.name,
+            row=row,
+            column=column,
+            created=timezone.now()
+        )
+        
         res = {
             "status": 200,
             "message": "上传成功",
-            "content": pk
+            "content": f.pk
         }
         return Response(res, status=status.HTTP_200_OK)
     
@@ -299,3 +305,8 @@ class InsertView(APIView):
             "content": True
         }
         return Response(res, status=status.HTTP_200_OK)
+    
+def delete_file(pk: int):
+    file = File.objects.get(pk=pk)
+    os.remove(file.path)
+    file.delete()

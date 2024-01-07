@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     # 'django.contrib.staticfiles',
     'channels',
     'file',
-    'analysis'
+    'analysis',
+    'forecast'
 ]
 
 MIDDLEWARE = [

@@ -8,8 +8,8 @@ from statsmodels.tsa.ar_model import AutoReg
 from statsmodels.tsa.arima.model import ARIMA
 from prophet import Prophet
 
-from file.models import File
-from forecast.models import Result
+from forecast.models import File
+# from forecast.models import Result
 
 def AR(pk: int, target, order, window, step) -> np.ndarray:
     """自回归模型预测时序数据
@@ -31,6 +31,8 @@ def AR(pk: int, target, order, window, step) -> np.ndarray:
     
     forecast = ar_result.predict(start=len(training_window), end=len(training_window)+step-1)
 
+    plt.switch_backend('Agg')
+
     plt.clf()
     plt.plot(list(range(len(data), len(data)+step)), forecast, label='Prediction', linestyle='--')
     plt.plot(list(range(len(data)-window, len(data))), training_window, label='Training Data', linestyle='-')
@@ -42,7 +44,7 @@ def AR(pk: int, target, order, window, step) -> np.ndarray:
     path = 'result/forecast_AR_' + file.name + '.png'
     plt.savefig(path)
 
-    return forecast, len(data)
+    return forecast, path
     # [240.34873895 240.30165088 240.25839607 240.21866248 240.18216345
     # 240.14863568 240.11783728 240.08954607 240.06355793 240.0396854]
 
@@ -66,6 +68,8 @@ def ARIMA_model(pk: int, target, order, window, step) -> pd.core.series.Series:
     
     forecast = arima_result.predict(start=len(training_window), end=len(training_window)+step-1, typ='levels')
     
+    plt.switch_backend('Agg')
+
     plt.clf()
     plt.plot(forecast.index, forecast.values, label='Prediction', linestyle='--')
     plt.plot(list(range(len(data)-window, len(data))), training_window, label='Training Data', linestyle='-')
@@ -77,7 +81,7 @@ def ARIMA_model(pk: int, target, order, window, step) -> pd.core.series.Series:
     path = 'result/forecast_ARIMA_' + file.name + '.png'
     plt.savefig(path)
 
-    return forecast
+    return forecast, path
     # 101236    240.377907
     # 101237    240.377388
     # 101238    240.377376
@@ -126,6 +130,8 @@ def Fbprophet(pk: int, target, window, step, periods, freq) -> pd.core.frame.Dat
 
     training_window['ds'] = pd.to_datetime(training_window['ds'])
 
+    plt.switch_backend('Agg')
+
     plt.clf()
     plt.plot(forecast['ds'], forecast['yhat'], label='Prediction', linestyle='--')
     plt.plot(training_window['ds'], training_window['y'], label='Training Data', linestyle='-')
@@ -137,7 +143,7 @@ def Fbprophet(pk: int, target, window, step, periods, freq) -> pd.core.frame.Dat
     path = 'result/forecast_fbprophet_' + file.name + '.png'
     plt.savefig(path)
 
-    return forecast
+    return forecast, path
     #                      ds        trend     yhat_lower  ...  multiplicative_terms_lower  multiplicative_terms_upper         yhat
     # 0   2023-04-23 08:51:43   239.238079     238.931432  ...                         0.0                         0.0   239.238079
     # 1   2023-04-23 08:56:43   239.245132     238.939292  ...                         0.0                         0.0   239.245132
