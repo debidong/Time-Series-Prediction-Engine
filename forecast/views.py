@@ -79,15 +79,16 @@ class InferView(APIView):
         pk_model = request.data.get("pk_model")
         pk_file = request.data.get("pk_file")
         step = request.data.get("step")
-        infer(pk_model, pk_file, step)
+        _, figure = infer(pk_model, pk_file, step)
         res = {
             "status": 200,
             "message": "提交成功",
             "content": {
-                "figure": "test"
+                "figure": './api/' + figure
             }
         }
         return Response(res, status=status.HTTP_200_OK)
+    
 class TableView(APIView):
     def post(self, request):
         '''查询数据库中全部的文件
