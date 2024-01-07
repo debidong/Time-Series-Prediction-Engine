@@ -34,8 +34,8 @@ def AR(pk: int, target, order, window, step) -> np.ndarray:
     plt.switch_backend('Agg')
 
     plt.clf()
-    plt.plot(list(range(len(data), len(data)+step)), forecast, label='Prediction', linestyle='--')
-    plt.plot(list(range(len(data)-window, len(data))), training_window, label='Training Data', linestyle='-')
+    plt.plot(list(range(window, window+step)), forecast, label='Prediction', linestyle='--')
+    plt.plot(list(range(window)), training_window, label='Training Data', linestyle='-')
     plt.xlabel('Serial')
     plt.ylabel(target)
     plt.title('AR Model Prediction')
@@ -68,11 +68,13 @@ def ARIMA_model(pk: int, target, order, window, step) -> pd.core.series.Series:
     
     forecast = arima_result.predict(start=len(training_window), end=len(training_window)+step-1, typ='levels')
     
+    print(forecast.values)
+
     plt.switch_backend('Agg')
 
     plt.clf()
-    plt.plot(forecast.index, forecast.values, label='Prediction', linestyle='--')
-    plt.plot(list(range(len(data)-window, len(data))), training_window, label='Training Data', linestyle='-')
+    plt.plot(list(range(window, window + step)), forecast.values, label='Prediction', linestyle='--')
+    plt.plot(list(range(window)), training_window, label='Training Data', linestyle='-')
     plt.xlabel('Serial')
     plt.ylabel(target)
     plt.title('ARIMA Model Prediction')
@@ -103,6 +105,18 @@ def Fbprophet(pk: int, target, window, step, periods, freq) -> pd.core.frame.Dat
     step: 预测数据步长，即使用模型预测后续多少个数据点
     periods: 预测数据的期数，即使用模型预测后续多少个数据点
     freq: 预测数据的频率
+        D: 天
+        H: 小时
+        T/min: 分钟
+        S: 秒
+        L/ms: 毫秒
+        U/us: 微秒
+        N/ns: 纳秒
+        B: 交易日
+        W: 每周
+        M: 月末
+        Q: 季度末
+        A/Y: 年末
     """
     window = int(window)
     step = int(step)
@@ -133,16 +147,16 @@ def Fbprophet(pk: int, target, window, step, periods, freq) -> pd.core.frame.Dat
     plt.switch_backend('Agg')
 
     plt.clf()
-    plt.plot(forecast['ds'], forecast['yhat'], label='Prediction', linestyle='--')
-    plt.plot(training_window['ds'], training_window['y'], label='Training Data', linestyle='-')
-    plt.xlabel('Date')
+    plt.plot(list(range(window, window + len(forecast))), forecast['yhat'], label='Prediction', linestyle='--')
+    plt.plot(list(range(window)), training_window['y'], label='Training Data', linestyle='-')
+    plt.xlabel('Serial')
     plt.ylabel(target)
     plt.title('Fbprophet Model Prediction')
     plt.legend()
 
     path = 'result/forecast_fbprophet_' + file.name + '.png'
     plt.savefig(path)
-
+    print(forecast)
     return forecast, path
     #                      ds        trend     yhat_lower  ...  multiplicative_terms_lower  multiplicative_terms_upper         yhat
     # 0   2023-04-23 08:51:43   239.238079     238.931432  ...                         0.0                         0.0   239.238079
