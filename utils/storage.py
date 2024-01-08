@@ -3,11 +3,11 @@ import os
 
 ALLOWED_EXTENSIONS = set(['csv'])
 # 用于存储界面1的数据集
-FILE_FOLDER = './dataset'
+FILE_PATH = './dataset'
 # 用于暂存界面3的数据集
-TEMP_FOLDER = './temp'
+TEMP_PATH = './temp'
 # 用于存放界面2和界面3的结果
-RESULT_FOLDER = './result'
+RESULT_PATH = './result'
 # 用于存放界面2的训练模型
 MODEL_PATH = './torch_models/'
 
@@ -16,7 +16,7 @@ def is_allowed_file(filename: str) -> bool:
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-def is_duplicate_name(current_file_path, directory_path=FILE_FOLDER) -> bool:
+def is_duplicate_name(current_file_path, directory_path=FILE_PATH) -> bool:
     """检查文件名是否冗余"""
     current_file_name = os.path.basename(current_file_path)
     duplicate_file_path = os.path.join(directory_path, current_file_name)
