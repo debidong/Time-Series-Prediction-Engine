@@ -200,10 +200,11 @@ class FileView(APIView):
         """文件上传
         """
         file = request.FILES['file']
+        name = file.name.split(".")[0] + '-' +timezone.now().strftime('%Y%m%d%H%M%S') + '.csv'
         if not (file and is_allowed_file(file.name)):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        if is_duplicate_name(file.name, directory_path=FORECAST_FOLDER):
+        if is_duplicate_name(name, directory_path=FORECAST_FOLDER):
             res = {
                 "status": 500,
                 "message": "存在重复文件",
@@ -211,19 +212,19 @@ class FileView(APIView):
             }
             return Response(res, status=status.HTTP_200_OK)
 
-        path = FORECAST_FOLDER+"/"+file.name
+        path = FORECAST_FOLDER+"/"+name
         with open(path, "wb+") as destination:
             for chunk in file.chunks():
                 destination.write(chunk)
 
         row, column = pd.read_csv(path).shape
-        path = FORECAST_FOLDER+"/"+file.name
+        path = FORECAST_FOLDER+"/"+name
         dumped_file = pd.read_csv(path)      
         row, column = dumped_file.shape
 
         f = File.objects.create(
             path=path,
-            name=file.name,
+            name=name,
             row=row,
             column=column,
             created=timezone.now()

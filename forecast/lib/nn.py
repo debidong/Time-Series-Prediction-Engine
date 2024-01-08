@@ -6,7 +6,7 @@ import torch
 from sklearn.preprocessing import MinMaxScaler
 
 from analysis.models import Algorithm, Result
-from file.models import File
+from forecast.models import File
 
 def infer(pk_algo: int, pk_file: int, step: int):
 
