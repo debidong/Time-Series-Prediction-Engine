@@ -50,164 +50,172 @@ def create_network(network_type: str, input_size, hidden_sizes, output_size, tra
     return network
 
 # TODO: 添加参数异常处理
+# 目前已经添加了简单的try except处理，用于将中断的训练记录回滚至INI状态
 @shared_task
 def train(pk: int):
-    channel_layer = get_channel_layer()
-    group_name = "training_progress"
+    try:
+        channel_layer = get_channel_layer()
+        group_name = "training_progress"
 
-    algo = Algorithm.objects.get(pk=pk)
-    dataset = algo.dataset
+        algo = Algorithm.objects.get(pk=pk)
+        dataset = algo.dataset
 
-    training_window = algo.window
-    T = algo.step
-    selected_features = json.loads(algo.selected)
-    data = pd.read_csv(dataset.path) #数据集路径
-    training_goal = data[algo.target].values #将目标从数据集中抽取出来
-    training_features = data[selected_features].values #将特征从数据集中抽取出来
-    scaler_features = MinMaxScaler()
-    scaler_goal = MinMaxScaler()
-    training_features_normalized = scaler_features.fit_transform(training_features)
-    training_goal_normalized = scaler_goal.fit_transform(training_goal.reshape(-1, 1))
-    X, Y = [], []
-    # 超参数
-    for i in range(training_window, len(training_features_normalized) - T):
-        X.append(training_features_normalized[i-training_window:i, :])
-        Y.append(training_goal_normalized[i:i+T, 0])
-    losses = []  # 用于记录每个epoch的loss
+        training_window = algo.window
+        T = algo.step
+        selected_features = json.loads(algo.selected)
+        data = pd.read_csv(dataset.path) #数据集路径
+        training_goal = data[algo.target].values #将目标从数据集中抽取出来
+        training_features = data[selected_features].values #将特征从数据集中抽取出来
+        scaler_features = MinMaxScaler()
+        scaler_goal = MinMaxScaler()
+        training_features_normalized = scaler_features.fit_transform(training_features)
+        training_goal_normalized = scaler_goal.fit_transform(training_goal.reshape(-1, 1))
+        X, Y = [], []
+        # 超参数
+        for i in range(training_window, len(training_features_normalized) - T):
+            X.append(training_features_normalized[i-training_window:i, :])
+            Y.append(training_goal_normalized[i:i+T, 0])
+        losses = []  # 用于记录每个epoch的loss
 
-    X = torch.tensor(np.array(X, dtype=np.float32))
-    Y = torch.tensor(np.array(Y, dtype=np.float32))
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=algo.verificationRate, random_state=42)
+        X = torch.tensor(np.array(X, dtype=np.float32))
+        Y = torch.tensor(np.array(Y, dtype=np.float32))
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=algo.verificationRate, random_state=42)
 
-    device = ''
-    cuda_available = torch.cuda.is_available()
-    if cuda_available:
-        device = 'cuda'
-    else:
-        device = 'cpu'
+        device = ''
+        cuda_available = torch.cuda.is_available()
+        if cuda_available:
+            device = 'cuda'
+        else:
+            device = 'cpu'
 
-    # 将数据移动到GPU上
-    X_test = X_test.to(device)
-    Y_test = Y_test.to(device)
-    X_train = X_train.to(device)
-    Y_train = Y_train.to(device)
+        # 将数据移动到GPU上
+        X_test = X_test.to(device)
+        Y_test = Y_test.to(device)
+        X_train = X_train.to(device)
+        Y_train = Y_train.to(device)
 
-    train_dataset = TensorDataset(X_train, Y_train)
-    # 创建DataLoader
-    train_loader = DataLoader(train_dataset, batch_size=algo.batchSize, shuffle=True, num_workers=0)
+        train_dataset = TensorDataset(X_train, Y_train)
+        # 创建DataLoader
+        train_loader = DataLoader(train_dataset, batch_size=algo.batchSize, shuffle=True, num_workers=0)
 
-    input_dim = training_features_normalized.shape[1]
-    hidden_dim = 50
-    neurons = ast.literal_eval(algo.neurons)
-    neurons = [int(x) for x in neurons]
-    model = create_network(algo.neuralNetwork, input_dim, neurons, T, training_window)
-    model = model.to('cuda')
+        input_dim = training_features_normalized.shape[1]
+        hidden_dim = 50
+        neurons = ast.literal_eval(algo.neurons)
+        neurons = [int(x) for x in neurons]
+        model = create_network(algo.neuralNetwork, input_dim, neurons, T, training_window)
+        model = model.to('cuda')
 
-    # 训练
-    loss_function = nn.MSELoss()
-    optimizer = create_optimizer(optimizer_name=algo.optimization, model_parameters=model.parameters(), lr=algo.learningRate)
-    epoches = algo.epoch
-    algo.status = "ING"
-    algo.save()
-    
-    # 训练开始时发送一回0%进度
-    async_to_sync(channel_layer.group_send)(
-        group_name,
-        {
-            'type': 'send_training_progress',
-            'algoID': pk,
-            'progress': 0.0,
-        }
-    )
-
-    # 使用epoch / algo.epoch在前端中展示训练进度
-    for epoch in range(epoches):
-        model.train()
-        for batch_X, batch_y in train_loader:
-            batch_X = batch_X.to(device)
-            batch_y = batch_y.to(device)
-            optimizer.zero_grad()
-            Y_pred = model(batch_X)
-            loss = loss_function(Y_pred, batch_y)
-            loss.backward()
-            losses.append(loss.item())
-            optimizer.step()
-
-            del batch_X, batch_y, Y_pred
-
-        progress = epoch / algo.epoch
+        # 训练
+        loss_function = nn.MSELoss()
+        optimizer = create_optimizer(optimizer_name=algo.optimization, model_parameters=model.parameters(), lr=algo.learningRate)
+        epoches = algo.epoch
+        algo.status = "ING"
+        algo.save()
+        
+        # 训练开始时发送一回0%进度
         async_to_sync(channel_layer.group_send)(
             group_name,
             {
                 'type': 'send_training_progress',
                 'algoID': pk,
-                'progress': progress,
+                'progress': 0.0,
+            }
+        )
+
+        # 使用epoch / algo.epoch在前端中展示训练进度
+        for epoch in range(epoches):
+            model.train()
+            for batch_X, batch_y in train_loader:
+                batch_X = batch_X.to(device)
+                batch_y = batch_y.to(device)
+                optimizer.zero_grad()
+                Y_pred = model(batch_X)
+                loss = loss_function(Y_pred, batch_y)
+                loss.backward()
+                losses.append(loss.item())
+                optimizer.step()
+
+                del batch_X, batch_y, Y_pred
+
+            progress = epoch / algo.epoch
+            async_to_sync(channel_layer.group_send)(
+                group_name,
+                {
+                    'type': 'send_training_progress',
+                    'algoID': pk,
+                    'progress': progress,
+                }
+            )
+            redis_conn.set(pk, progress)
+            torch.cuda.empty_cache()
+        # 训练结束后发送一回100%进度
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                'type': 'send_training_progress',
+                'algoID': pk,
+                'progress': 1.0,
             }
         )
         redis_conn.set(pk, progress)
-        torch.cuda.empty_cache()
-    # 训练结束后发送一回100%进度
-    async_to_sync(channel_layer.group_send)(
-        group_name,
-        {
-            'type': 'send_training_progress',
-            'algoID': pk,
-            'progress': 1.0,
-        }
-    )
-    redis_conn.set(pk, progress)
-    model.eval()
+        model.eval()
 
-    with torch.no_grad():
-        test_predictions = model(X_test)
-        test_predictions_cpu = test_predictions.cpu()
-    test_predictions = scaler_goal.inverse_transform(test_predictions_cpu.numpy())
-    Y_test_actual = scaler_goal.inverse_transform(Y_test.cpu().numpy())
+        with torch.no_grad():
+            test_predictions = model(X_test)
+            test_predictions_cpu = test_predictions.cpu()
+        test_predictions = scaler_goal.inverse_transform(test_predictions_cpu.numpy())
+        Y_test_actual = scaler_goal.inverse_transform(Y_test.cpu().numpy())
 
-    model_path = './torch_models/'+algo.name+'.pth'
-    torch.save(model, model_path)
+        model_path = './torch_models/'+algo.name+'.pth'
+        torch.save(model, model_path)
 
-    result_directory = './result'
-    if not os.path.exists(result_directory):
-        os.makedirs(result_directory)
+        result_directory = './result'
+        if not os.path.exists(result_directory):
+            os.makedirs(result_directory)
 
-    # 保持两张图片和MSE,RMSE,MAE三个数值
-    # 展示前100个预测数据与真实数据的差异
-    
-    index_ = 100 // T
+        # 保持两张图片和MSE,RMSE,MAE三个数值
+        # 展示前100个预测数据与真实数据的差异
+        
+        index_ = 100 // T
 
-    plt.clf()
-    plt.plot(test_predictions[0:index_], label='Predicted Values', color='blue', linestyle='dashed')
-    plt.plot(Y_test_actual[0:index_], label='Actual values', color='grey')
-    plt.legend()
-    plt.title('Actual vs Predicted Values')
-    plt.xlabel('Index')
-    plt.ylabel('Values')
-    difference_path = 'result/compare_' + algo.name + '.png'
-    plt.savefig(difference_path)
-    # 展示损失率
-    plt.clf()
-    plt.plot(losses)
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Training Loss')
-    loss_path = 'result/training_loss_' + algo.name + '.png'
-    plt.savefig(loss_path)
+        plt.clf()
+        plt.plot(test_predictions[0:index_], label='Predicted Values', color='blue', linestyle='dashed')
+        plt.plot(Y_test_actual[0:index_], label='Actual values', color='grey')
+        plt.legend()
+        plt.title('Actual vs Predicted Values')
+        plt.xlabel('Index')
+        plt.ylabel('Values')
+        difference_path = 'result/compare_' + algo.name + '.png'
+        plt.savefig(difference_path)
+        # 展示损失率
+        plt.clf()
+        plt.plot(losses)
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Training Loss')
+        loss_path = 'result/training_loss_' + algo.name + '.png'
+        plt.savefig(loss_path)
 
-    mse = np.mean((test_predictions - Y_test_actual) ** 2)
-    rmse = np.sqrt(mse)
-    mae = np.mean(np.abs(test_predictions - Y_test_actual))
-    result = Result(
-                algo=algo,
-                difference='./api/'+difference_path,
-                loss='./api/'+loss_path,
-                mse=mse,
-                rmse=rmse,
-                mae=mae,
-                model=model_path
-                )
-    result.save()
-    algo.status = "FIN"
-    algo.save()
-    redis_conn.delete(pk)
-    return 0
+        mse = np.mean((test_predictions - Y_test_actual) ** 2)
+        rmse = np.sqrt(mse)
+        mae = np.mean(np.abs(test_predictions - Y_test_actual))
+        result = Result(
+                    algo=algo,
+                    difference='./api/'+difference_path,
+                    loss='./api/'+loss_path,
+                    mse=mse,
+                    rmse=rmse,
+                    mae=mae,
+                    model=model_path
+                    )
+        result.save()
+        algo.status = "FIN"
+        algo.save()
+        redis_conn.delete(pk)
+        return 0
+    except:
+        # 训练出现错误
+        algo.status = "INI"
+        algo.save()
+        redis_conn.delete(pk)
+        return -1

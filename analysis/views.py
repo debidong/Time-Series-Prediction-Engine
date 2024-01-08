@@ -221,7 +221,7 @@ class TrainingView(APIView):
         algo: Algorithm = Algorithm.objects.get(pk=request.data.get("id"))
         if algo is not None:
             # 搭配celery在后台进行训练
-            train.delay(algo.pk)
+            ret = train.delay(algo.pk)
             res = {
                 "status": 200,
                 "message": "提交成功",
