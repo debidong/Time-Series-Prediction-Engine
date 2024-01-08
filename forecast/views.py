@@ -4,11 +4,9 @@ import pandas as pd
 from rest_framework.views import APIView, Response, status
 from .lib.regression import AR, ARIMA_model, Fbprophet
 from .lib.nn import infer
-from django.core.paginator import Paginator
 
 from utils.storage import is_allowed_file, is_duplicate_name, TEMP_FOLDER
 from .models import File
-from analysis.views import analyze_csv
 
 class ARView(APIView):
     def post(self, request):
@@ -50,17 +48,24 @@ class ARIMAView(APIView):
         target = request.data.get('target')
         window = request.data.get('window')
         step = request.data.get('step')
-        _, figure = ARIMA_model(pk, target, order, window, step)
-        res = {
-            "status": 200,
-            "content": "提交成功",
-            "content": {
-                    "figure": './api/' + figure
-            },
-        }
-        # delete_file(pk)
-        return Response(res, status=status.HTTP_200_OK)
-    
+        try:
+            _, figure = ARIMA_model(pk, target, order, window, step)
+            res = {
+                "status": 200,
+                "content": "提交成功",
+                "content": {
+                        "figure": './api/' + figure
+                },
+            }
+            # delete_file(pk)
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            res = {
+                "status": 500,
+                "content": "参数有误"
+            }
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
 class FbprophetView(APIView):
     def post(self, request):
         '''提交预测，使用fbprophet模型
@@ -71,17 +76,25 @@ class FbprophetView(APIView):
         step = request.data.get('step')
         periods = request.data.get('periods')
         freq = request.data.get('freq')
-        _, figure = Fbprophet(pk, target, window, step, periods, freq)
-        res = {
-            "status": 200,
-            "message": "提交成功",
-            "content": {
-                "figure": './api/' + figure
+        try:
+            _, figure = Fbprophet(pk, target, window, step, periods, freq)
+            res = {
+                "status": 200,
+                "message": "提交成功",
+                "content": {
+                    "figure": './api/' + figure
+                }
             }
-        }
-        # delete_file(pk)
-        return Response(res, status=status.HTTP_200_OK)
-    
+            # delete_file(pk)
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            res = {
+                "status": 500,
+                "message": "参数有误",
+                "content": None
+            }
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
+        
 class InferView(APIView):
     def post(self, request):
         '''提交预测，使用训练完毕的神经网络模型
@@ -89,14 +102,22 @@ class InferView(APIView):
         pk_model = request.data.get("pk_model")
         pk_file = request.data.get("pk_file")
         _, figure = infer(pk_model, pk_file)
-        res = {
-            "status": 200,
-            "message": "提交成功",
-            "content": {
-                "figure": './api/' + figure
+        try:
+            res = {
+                "status": 200,
+                "message": "提交成功",
+                "content": {
+                    "figure": './api/' + figure
+                }
             }
-        }
-        return Response(res, status=status.HTTP_200_OK)
+            return Response(res, status=status.HTTP_200_OK)
+        except:
+            res = {
+                "status": 500,
+                "message": "参数有误",
+                "content": None
+            }
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
 class FileView(APIView):
     def post(self, request):
