@@ -8,12 +8,13 @@ from sklearn.preprocessing import MinMaxScaler
 from analysis.models import Algorithm, Result
 from forecast.models import File
 
-def infer(pk_algo: int, pk_file: int, step: int):
+def infer(pk_algo: int, pk_file: int):
 
     algo = Algorithm.objects.get(pk=pk_algo)
     file = File.objects.get(pk=pk_file)
     result = Result.objects.get(algo=algo)
     window = int(algo.window)
+    step = int(algo.step)
     model = torch.load(result.model, map_location=torch.device('cpu'))
     data = pd.read_csv(file.path)  # 待预测数据集路径
     try:

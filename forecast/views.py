@@ -78,8 +78,7 @@ class InferView(APIView):
     def post(self, request):
         pk_model = request.data.get("pk_model")
         pk_file = request.data.get("pk_file")
-        step = request.data.get("step")
-        _, figure = infer(pk_model, pk_file, step)
+        _, figure = infer(pk_model, pk_file)
         res = {
             "status": 200,
             "message": "提交成功",
