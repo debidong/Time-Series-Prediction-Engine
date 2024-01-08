@@ -12,7 +12,9 @@ from analysis.views import analyze_csv
 
 class ARView(APIView):
     def post(self, request):
-        # try:
+        '''提交预测，使用AR模型
+        '''
+        try:
             pk = request.data.get('pk')
             order = request.data.get('order')
             target = request.data.get('target')
@@ -28,17 +30,21 @@ class ARView(APIView):
             }
 
             # 删除暂存文件
+            # TODO:
+            # 前端上传文件之后反悔可能会引起文件残留，需要引入特定的信号来清除残留文件，或者定期手动清理
             delete_file(pk)
             return Response(res, status=status.HTTP_200_OK)
-        # except:
-        #     res = {
-        #         "status": 500,
-        #         "content": "参数有误"
-        #     }
-        #     return Response(res, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            res = {
+                "status": 500,
+                "content": "参数有误"
+            }
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
 class ARIMAView(APIView):
     def post(self, request):
+        '''提交预测，使用ARIMA模型
+        '''
         pk = request.data.get('pk')
         order = request.data.get('order')
         target = request.data.get('target')
@@ -57,6 +63,8 @@ class ARIMAView(APIView):
     
 class FbprophetView(APIView):
     def post(self, request):
+        '''提交预测，使用fbprophet模型
+        '''
         pk = request.data.get('pk')
         target = request.data.get('target')
         window = request.data.get('window')
@@ -76,6 +84,8 @@ class FbprophetView(APIView):
     
 class InferView(APIView):
     def post(self, request):
+        '''提交预测，使用训练完毕的神经网络模型
+        '''
         pk_model = request.data.get("pk_model")
         pk_file = request.data.get("pk_file")
         _, figure = infer(pk_model, pk_file)
