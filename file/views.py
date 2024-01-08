@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import datetime
 
-from utils.storage import is_allowed_file, is_duplicate_name, FILE_FOLDER
+from utils.storage import is_allowed_file, is_duplicate_name, FILE_PATH
 from .models import File
 from analysis.views import analyze_csv
 
@@ -132,7 +132,7 @@ class FileView(APIView):
                 "content": False
             }
             return Response(res, status=status.HTTP_200_OK)
-        path = FILE_FOLDER+"/"+file.name
+        path = FILE_PATH+"/"+file.name
         with open(path, "wb+") as destination:
             for chunk in file.chunks():
                 destination.write(chunk)
@@ -177,7 +177,7 @@ class FileView(APIView):
             name = request.data.get("name")
             try:
                 # 这一步有可能造成目录遍历删除任意文件，但是业务非要这么做没办法
-                path = FILE_FOLDER + name
+                path = FILE_PATH + name
                 os.remove(path)
                 res = {
                     "status": 200,
@@ -196,7 +196,7 @@ class InsertView(APIView):
     """
     def post(self, request):
         name = request.data.get("name")
-        path = FILE_FOLDER+"/"+name
+        path = FILE_PATH+"/"+name
         dumped_file = pd.read_csv(path)      
         row, column = dumped_file.shape
 

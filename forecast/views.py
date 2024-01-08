@@ -5,7 +5,7 @@ from rest_framework.views import APIView, Response, status
 from .lib.regression import AR, ARIMA_model, Fbprophet
 from .lib.nn import infer
 
-from utils.storage import is_allowed_file, is_duplicate_name, TEMP_FOLDER
+from utils.storage import is_allowed_file, is_duplicate_name, TEMP_PATH
 from .models import File
 
 class ARView(APIView):
@@ -128,7 +128,7 @@ class FileView(APIView):
         if not (file and is_allowed_file(file.name)):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        if is_duplicate_name(name, directory_path=TEMP_FOLDER):
+        if is_duplicate_name(name, directory_path=TEMP_PATH):
             res = {
                 "status": 500,
                 "message": "存在重复文件",
@@ -136,13 +136,13 @@ class FileView(APIView):
             }
             return Response(res, status=status.HTTP_200_OK)
 
-        path = TEMP_FOLDER+"/"+name
+        path = TEMP_PATH+"/"+name
         with open(path, "wb+") as destination:
             for chunk in file.chunks():
                 destination.write(chunk)
 
         row, column = pd.read_csv(path).shape
-        path = TEMP_FOLDER+"/"+name
+        path = TEMP_PATH+"/"+name
         dumped_file = pd.read_csv(path)      
         row, column = dumped_file.shape
 

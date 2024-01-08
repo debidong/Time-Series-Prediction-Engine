@@ -15,7 +15,7 @@ from celery import shared_task
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-from utils.storage import MODEL_PATH
+from utils.storage import MODEL_PATH, RESULT_PATH
 
 from .models import FullyConnectedNetwork, LSTMNetwork
 from analysis.models import Algorithm, Result
@@ -171,7 +171,7 @@ def train(pk: int):
         model_path = MODEL_PATH + algo.name + '.pth'
         torch.save(model, model_path)
 
-        result_directory = './result'
+        result_directory = RESULT_PATH
         if not os.path.exists(result_directory):
             os.makedirs(result_directory)
 
@@ -187,7 +187,7 @@ def train(pk: int):
         plt.title('Actual vs Predicted Values')
         plt.xlabel('Index')
         plt.ylabel('Values')
-        difference_path = 'result/compare_' + algo.name + '.png'
+        difference_path = RESULT_PATH[1:]+'figure/compare_' + algo.name + '.png'
         plt.savefig(difference_path)
         # 展示损失率
         plt.clf()
@@ -195,7 +195,7 @@ def train(pk: int):
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.title('Training Loss')
-        loss_path = 'result/training_loss_' + algo.name + '.png'
+        loss_path = RESULT_PATH[1:]+'figure/training_loss_' + algo.name + '.png'
         plt.savefig(loss_path)
 
         mse = np.mean((test_predictions - Y_test_actual) ** 2)
@@ -203,8 +203,8 @@ def train(pk: int):
         mae = np.mean(np.abs(test_predictions - Y_test_actual))
         result = Result(
                     algo=algo,
-                    difference='./api/'+difference_path,
-                    loss='./api/'+loss_path,
+                    difference='./api'+difference_path,
+                    loss='./api'+loss_path,
                     mse=mse,
                     rmse=rmse,
                     mae=mae,

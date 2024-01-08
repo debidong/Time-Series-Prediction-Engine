@@ -5,7 +5,7 @@ import pandas as pd
 import torch
 from sklearn.preprocessing import MinMaxScaler
 from analysis.models import Algorithm, Result
-from utils.storage import RESULT_FOLDER
+from utils.storage import RESULT_PATH
 from forecast.models import File
 
 def infer(pk_algo: int, pk_file: int):
@@ -57,7 +57,7 @@ def infer(pk_algo: int, pk_file: int):
     plt.savefig(path)
 
     forecast_df = pd.DataFrame({algo.target: forecast})
-    csv_path = RESULT_FOLDER + '/forecast_'+ algo.name + '_' + file.name + '_result.csv'
+    csv_path = RESULT_PATH + '/forecast_'+ algo.name + '_' + file.name + '_result.csv'
     forecast_df.to_csv(csv_path, index=False)
 
     return forecast, path
