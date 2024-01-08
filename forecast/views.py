@@ -150,7 +150,7 @@ def delete_file(pk: int):
     '''
     try:
         file = File.objects.get(pk=pk)
-        os.remove(file.path)
+        # os.remove(file.path)
         file.delete()
     except:
         pass
