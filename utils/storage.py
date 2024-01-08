@@ -8,7 +8,8 @@ FILE_FOLDER = './dataset'
 TEMP_FOLDER = './temp'
 # 用于存放界面2和界面3的结果
 RESULT_FOLDER = './result'
-
+# 用于存放界面2的训练模型
+MODEL_PATH = './torch_models/'
 
 def is_allowed_file(filename: str) -> bool:
     """根据文件名判断文件类型是否合法"""

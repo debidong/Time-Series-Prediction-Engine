@@ -15,6 +15,8 @@ from celery import shared_task
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
+from utils.storage import MODEL_PATH
+
 from .models import FullyConnectedNetwork, LSTMNetwork
 from analysis.models import Algorithm, Result
 from utils.db import redis_conn
@@ -166,7 +168,7 @@ def train(pk: int):
         test_predictions = scaler_goal.inverse_transform(test_predictions_cpu.numpy())
         Y_test_actual = scaler_goal.inverse_transform(Y_test.cpu().numpy())
 
-        model_path = './torch_models/'+algo.name+'.pth'
+        model_path = MODEL_PATH + algo.name + '.pth'
         torch.save(model, model_path)
 
         result_directory = './result'
