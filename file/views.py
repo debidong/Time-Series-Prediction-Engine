@@ -24,7 +24,7 @@ class TableView(APIView):
             "content": {
                 "columns": [
                     {
-                        "name": "时空数据",
+                        "name": "数据集名称",
                         "value": "dataName"
                     },
                     {
