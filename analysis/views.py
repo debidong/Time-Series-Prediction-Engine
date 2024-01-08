@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 
 from .models import Algorithm, Result
 from file.models import File
-from .lib.run import train
+from .lib.train import train
 from utils.db import redis_conn
 
 class GetAlgorithmView(APIView):
