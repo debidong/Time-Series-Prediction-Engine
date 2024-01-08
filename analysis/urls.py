@@ -3,6 +3,7 @@ from django.urls import path
 
 urlpatterns = [
     path('algos', GetAlgorithmView.as_view()),
+    path('algo/detail', GetAlgorithmDetailView.as_view()),
     path('algo/insert', AlgorithmView.as_view()),
     path('algo/delete', AlgorithmView.as_view()),
     path('train', TrainingView.as_view()),

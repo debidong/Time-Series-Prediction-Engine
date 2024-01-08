@@ -147,7 +147,41 @@ class AlgorithmView(APIView):
             }
             return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
-
+class GetAlgorithmDetailView(APIView):
+    """查询模型及算法详情
+    """
+    def post(self, request):
+        algo = Algorithm.objects.get(pk=request.data.get("id"))
+        if algo is not None:
+            res = {
+                "status": 200,
+                "message": "查询成功",
+                "content": {
+                    "description": algo.description,
+                    "name": algo.name,
+                    "neuralNetwork": algo.neuralNetwork,
+                    "layers": algo.layers,
+                    "learningRate": algo.learningRate,
+                    "neurons": algo.neurons,
+                    "epoch": algo.epoch,
+                    "batchSize": algo.batchSize,
+                    "optimization": algo.optimization,
+                    "selected": algo.selected,
+                    "target": algo.target,
+                    "verificationRate": algo.verificationRate,
+                    "window": algo.window,
+                    "step": algo.step,
+                    "status": algo.status
+                }
+            }
+            return Response(res, status=status.HTTP_200_OK)
+        else:
+            res = {
+                "status": 500,
+                "message": "模型不存在",
+                "content": None
+            }
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
 def analyze_csv(file_path):
     '''分析CSV文件
