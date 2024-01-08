@@ -4,6 +4,7 @@ import os
 ALLOWED_EXTENSIONS = set(['csv'])
 FILE_FOLDER = './upload'
 TEMP_FOLDER = './temp'
+RESULT_FOLDER = './result'
 current_file_path = './upload'
 current_file_row = 0
 current_file_column = 0

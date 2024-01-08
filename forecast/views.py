@@ -6,7 +6,7 @@ from .lib.regression import AR, ARIMA_model, Fbprophet
 from .lib.nn import infer
 from django.core.paginator import Paginator
 
-from file.storage import is_allowed_file, is_duplicate_name, TEMP_FOLDER
+from utils.storage import is_allowed_file, is_duplicate_name, TEMP_FOLDER
 from .models import File
 from analysis.views import analyze_csv
 
