@@ -32,7 +32,7 @@ class ARView(APIView):
             # 删除暂存文件
             # TODO:
             # 前端上传文件之后反悔可能会引起文件残留，需要引入特定的信号来清除残留文件，或者定期手动清理
-            delete_file(pk)
+            # delete_file(pk)
             return Response(res, status=status.HTTP_200_OK)
         except:
             res = {
@@ -58,7 +58,7 @@ class ARIMAView(APIView):
                     "figure": './api/' + figure
             },
         }
-        delete_file(pk)
+        # delete_file(pk)
         return Response(res, status=status.HTTP_200_OK)
     
 class FbprophetView(APIView):
@@ -79,7 +79,7 @@ class FbprophetView(APIView):
                 "figure": './api/' + figure
             }
         }
-        delete_file(pk)
+        # delete_file(pk)
         return Response(res, status=status.HTTP_200_OK)
     
 class InferView(APIView):
@@ -150,7 +150,7 @@ def delete_file(pk: int):
     '''
     try:
         file = File.objects.get(pk=pk)
-        # os.remove(file.path)
+        os.remove(file.path)
         file.delete()
     except:
         pass
