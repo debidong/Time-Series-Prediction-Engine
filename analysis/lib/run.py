@@ -59,6 +59,7 @@ def train(pk: int):
     dataset = algo.dataset
 
     training_window = algo.window
+    T = algo.step
     selected_features = json.loads(algo.selected)
     data = pd.read_csv(dataset.path) #数据集路径
     training_goal = data[algo.target].values #将目标从数据集中抽取出来
@@ -68,9 +69,10 @@ def train(pk: int):
     training_features_normalized = scaler_features.fit_transform(training_features)
     training_goal_normalized = scaler_goal.fit_transform(training_goal.reshape(-1, 1))
     X, Y = [], []
-    for i in range(len(training_features_normalized) - training_window):
-        X.append(training_features_normalized[i:i+training_window])
-        Y.append(training_goal_normalized[i+training_window])
+    # 超参数
+    for i in range(training_window, len(training_features_normalized) - T):
+        X.append(training_features_normalized[i-training_window:i, :])
+        Y.append(training_goal_normalized[i:i+T, 0])
     losses = []  # 用于记录每个epoch的loss
 
     X = torch.tensor(np.array(X, dtype=np.float32))
@@ -98,7 +100,7 @@ def train(pk: int):
     hidden_dim = 50
     neurons = ast.literal_eval(algo.neurons)
     neurons = [int(x) for x in neurons]
-    model = create_network(algo.neuralNetwork, input_dim, neurons, 1, training_window)
+    model = create_network(algo.neuralNetwork, input_dim, neurons, T, training_window)
     model = model.to('cuda')
 
     # 训练
@@ -171,9 +173,12 @@ def train(pk: int):
 
     # 保持两张图片和MSE,RMSE,MAE三个数值
     # 展示前100个预测数据与真实数据的差异
+    
+    index_ = 100 // T
+
     plt.clf()
-    plt.plot(test_predictions[0:100], label='Predicted Values', color='blue', linestyle='dashed')
-    plt.plot(Y_test_actual[0:100], label='Actual values', color='grey')
+    plt.plot(test_predictions[0:index_], label='Predicted Values', color='blue', linestyle='dashed')
+    plt.plot(Y_test_actual[0:index_], label='Actual values', color='grey')
     plt.legend()
     plt.title('Actual vs Predicted Values')
     plt.xlabel('Index')
