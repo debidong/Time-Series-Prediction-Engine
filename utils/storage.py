@@ -2,8 +2,11 @@
 import os
 
 ALLOWED_EXTENSIONS = set(['csv'])
+# 用于存储界面1的数据集
 FILE_FOLDER = './dataset'
+# 用于暂存界面3的数据集
 TEMP_FOLDER = './temp'
+# 用于存放界面2和界面3的结果
 RESULT_FOLDER = './result'
 
 
