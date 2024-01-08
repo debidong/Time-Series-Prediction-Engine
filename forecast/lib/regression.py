@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from statsmodels.tsa.ar_model import AutoReg
 from statsmodels.tsa.arima.model import ARIMA
 from prophet import Prophet
-from file.storage import FORECAST_FOLDER
+from file.storage import TEMP_FOLDER
 
 from forecast.models import File
 # from forecast.models import Result
@@ -46,7 +46,7 @@ def AR(pk: int, target, order, window, step) -> np.ndarray:
     plt.savefig(path)
 
     forecast_df = pd.DataFrame({target: forecast})
-    csv_path = FORECAST_FOLDER + '/forecast_AR_' + file.name + '_result.csv'
+    csv_path = TEMP_FOLDER + '/forecast_AR_' + file.name + '_result.csv'
     forecast_df.to_csv(csv_path, index=False)
 
     return forecast, path
@@ -89,7 +89,7 @@ def ARIMA_model(pk: int, target, order, window, step) -> pd.core.series.Series:
     plt.savefig(path)
 
     forecast_df = pd.DataFrame({target: forecast})
-    csv_path = FORECAST_FOLDER + '/forecast_ARIMA_' + file.name + '_result.csv'
+    csv_path = TEMP_FOLDER + '/forecast_ARIMA_' + file.name + '_result.csv'
     forecast_df.to_csv(csv_path, index=False)
 
     return forecast, path
@@ -167,7 +167,7 @@ def Fbprophet(pk: int, target, window, step, periods, freq) -> pd.core.frame.Dat
     plt.savefig(path)
     
     forecast_df = pd.DataFrame({target: forecast['yhat']})
-    csv_path = FORECAST_FOLDER + '/forecast_Fbprophet_' + file.name + '_result.csv'
+    csv_path = TEMP_FOLDER + '/forecast_Fbprophet_' + file.name + '_result.csv'
     forecast_df.to_csv(csv_path, index=False)
 
     return forecast, path

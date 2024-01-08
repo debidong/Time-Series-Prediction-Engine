@@ -3,7 +3,7 @@ import os
 
 ALLOWED_EXTENSIONS = set(['csv'])
 FILE_FOLDER = './upload'
-FORECAST_FOLDER = './temp'
+TEMP_FOLDER = './temp'
 current_file_path = './upload'
 current_file_row = 0
 current_file_column = 0

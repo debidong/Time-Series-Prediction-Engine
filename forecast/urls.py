@@ -8,8 +8,8 @@ urlpatterns = [
     path('regression/fbprophet', FbprophetView.as_view()),
     path('regression/nn', InferView.as_view()),
     # path('regression/result', ResultView.as_view()),
-    path('file/file', GetFileView.as_view()),
+    # path('file/file', GetFileView.as_view()),
     path('file/upload', FileView.as_view()),
-    path('file/insert', InsertView.as_view()),
-    path('file/delete', FileView.as_view())
+    # path('file/insert', InsertView.as_view()),
+    # path('file/delete', FileView.as_view())
 ]
