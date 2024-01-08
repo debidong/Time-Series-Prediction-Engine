@@ -1,7 +1,7 @@
 # 文件的增删改查相关函数
 import os
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'webp', 'jpg', 'jpeg', 'csv'])
+ALLOWED_EXTENSIONS = set(['csv'])
 FILE_FOLDER = './upload'
 FORECAST_FOLDER = './temp'
 current_file_path = './upload'

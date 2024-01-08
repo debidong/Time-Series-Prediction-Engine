@@ -5,6 +5,7 @@ import pandas as pd
 import torch
 from sklearn.preprocessing import MinMaxScaler
 from analysis.models import Algorithm, Result
+from file.storage import FORECAST_FOLDER
 from forecast.models import File
 
 def infer(pk_algo: int, pk_file: int):
@@ -16,6 +17,9 @@ def infer(pk_algo: int, pk_file: int):
     step = int(algo.step)
     model = torch.load(result.model, map_location=torch.device('cpu'))
     data = pd.read_csv(file.path)  # 待预测数据集路径
+
+    original_data = pd.read_csv(algo.dataset.path) # 原始数据集
+
     try:
         training_features = data[json.loads(result.algo.selected)].values  # 将选择的特征从数据集中抽取出来
         training_goal = data[result.algo.target].values  # 将目标从数据集中抽取出来
@@ -24,8 +28,9 @@ def infer(pk_algo: int, pk_file: int):
     # 数据标准化
     scaler_features = MinMaxScaler()
     scaler_goal = MinMaxScaler()
-    # scaler_goal.fit(training_goal.reshape(-1, 1))
+    
     training_features_normalized = scaler_features.fit_transform(training_features)
+    scaler_goal.fit(training_goal.reshape(-1, 1))
     input_dim = training_features_normalized.shape[1]
 
     # 准备输入序列
@@ -34,9 +39,6 @@ def infer(pk_algo: int, pk_file: int):
     X_predict = X_predict.resize(1, window, input_dim)
     Y_predictions = model(X_predict)
     Y_predictions = scaler_goal.inverse_transform(Y_predictions.detach().numpy())
-    print(Y_predictions.detach().numpy())
-
-    print(Y_predictions)
 
     plt.switch_backend('Agg')
     plt.clf()
@@ -53,5 +55,9 @@ def infer(pk_algo: int, pk_file: int):
 
     path = "result/forecast_" + algo.neuralNetwork + "_" + file.name + '.png'
     plt.savefig(path)
+
+    forecast_df = pd.DataFrame({algo.target: forecast})
+    csv_path = FORECAST_FOLDER + '/forecast_'+ algo.name + '_' + file.name + '_result.csv'
+    forecast_df.to_csv(csv_path, index=False)
 
     return forecast, path

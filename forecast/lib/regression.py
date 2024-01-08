@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from statsmodels.tsa.ar_model import AutoReg
 from statsmodels.tsa.arima.model import ARIMA
 from prophet import Prophet
+from file.storage import FORECAST_FOLDER
 
 from forecast.models import File
 # from forecast.models import Result
@@ -43,6 +44,10 @@ def AR(pk: int, target, order, window, step) -> np.ndarray:
 
     path = 'result/forecast_AR_' + file.name + '.png'
     plt.savefig(path)
+
+    forecast_df = pd.DataFrame({target: forecast})
+    csv_path = FORECAST_FOLDER + '/forecast_AR_' + file.name + '_result.csv'
+    forecast_df.to_csv(csv_path, index=False)
 
     return forecast, path
     # [240.34873895 240.30165088 240.25839607 240.21866248 240.18216345
@@ -82,6 +87,10 @@ def ARIMA_model(pk: int, target, order, window, step) -> pd.core.series.Series:
 
     path = 'result/forecast_ARIMA_' + file.name + '.png'
     plt.savefig(path)
+
+    forecast_df = pd.DataFrame({target: forecast})
+    csv_path = FORECAST_FOLDER + '/forecast_ARIMA_' + file.name + '_result.csv'
+    forecast_df.to_csv(csv_path, index=False)
 
     return forecast, path
     # 101236    240.377907
@@ -156,7 +165,11 @@ def Fbprophet(pk: int, target, window, step, periods, freq) -> pd.core.frame.Dat
 
     path = 'result/forecast_fbprophet_' + file.name + '.png'
     plt.savefig(path)
-    print(forecast)
+    
+    forecast_df = pd.DataFrame({target: forecast['yhat']})
+    csv_path = FORECAST_FOLDER + '/forecast_Fbprophet_' + file.name + '_result.csv'
+    forecast_df.to_csv(csv_path, index=False)
+
     return forecast, path
     #                      ds        trend     yhat_lower  ...  multiplicative_terms_lower  multiplicative_terms_upper         yhat
     # 0   2023-04-23 08:51:43   239.238079     238.931432  ...                         0.0                         0.0   239.238079
