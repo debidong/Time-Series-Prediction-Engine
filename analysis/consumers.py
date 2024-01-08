@@ -10,7 +10,8 @@ class TrainingProgressConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
         # 启动心跳包定时器
-        self.heartbeat_task = asyncio.ensure_future(self.send_heartbeat())
+        # 废弃，改为前端向后端发送心跳
+        # self.heartbeat_task = asyncio.ensure_future(self.send_heartbeat())
 
     async def disconnect(self, close_code):
         # 关闭连接时取消定时器
@@ -26,8 +27,8 @@ class TrainingProgressConsumer(AsyncWebsocketConsumer):
             'algoID': algoID
         }))
 
-    async def send_heartbeat(self):
-        while True:
-            # 发送心跳包到 WebSocket 客户端
-            await self.send(text_data=json.dumps({'heartbeat': 'ping'}))
-            await asyncio.sleep(10)
+    # async def send_heartbeat(self):
+    #     while True:
+    #         # 发送心跳包到 WebSocket 客户端
+    #         await self.send(text_data=json.dumps({'heartbeat': 'ping'}))
+    #         await asyncio.sleep(10)
