@@ -2,13 +2,10 @@
 import os
 
 ALLOWED_EXTENSIONS = set(['csv'])
-FILE_FOLDER = './upload'
+FILE_FOLDER = './dataset'
 TEMP_FOLDER = './temp'
 RESULT_FOLDER = './result'
-current_file_path = './upload'
-current_file_row = 0
-current_file_column = 0
-current_file_name = ''
+
 
 def is_allowed_file(filename: str) -> bool:
     """根据文件名判断文件类型是否合法"""
