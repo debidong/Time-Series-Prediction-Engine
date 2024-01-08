@@ -33,6 +33,7 @@ def infer(pk_algo: int, pk_file: int):
     X_predict = torch.tensor(np.array(X_predict, dtype=np.float32))
     X_predict = X_predict.resize(1, window, input_dim)
     Y_predictions = model(X_predict)
+    Y_predictions = scaler_goal.inverse_transform(Y_predictions.detach().numpy())
     print(Y_predictions.detach().numpy())
 
     print(Y_predictions)
