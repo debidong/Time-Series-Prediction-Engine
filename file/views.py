@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import datetime
 
-from utils.storage import is_allowed_file, is_duplicate_name, FILE_FOLDER
+from ..utils.storage import is_allowed_file, is_duplicate_name, FILE_FOLDER
 from .models import File
 from analysis.views import analyze_csv
 
