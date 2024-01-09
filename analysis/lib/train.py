@@ -55,7 +55,7 @@ def create_network(network_type: str, input_size, hidden_sizes, output_size, tra
 # 目前已经添加了简单的try except处理，用于将中断的训练记录回滚至INI状态
 @shared_task
 def train(pk: int):
-    try:
+    # try:
         channel_layer = get_channel_layer()
         group_name = "training_progress"
 
@@ -101,7 +101,6 @@ def train(pk: int):
         train_loader = DataLoader(train_dataset, batch_size=algo.batchSize, shuffle=True, num_workers=0)
 
         input_dim = training_features_normalized.shape[1]
-        hidden_dim = 50
         neurons = ast.literal_eval(algo.neurons)
         neurons = [int(x) for x in neurons]
         model = create_network(algo.neuralNetwork, input_dim, neurons, T, training_window)
@@ -139,7 +138,7 @@ def train(pk: int):
 
                 del batch_X, batch_y, Y_pred
 
-            progress = epoch / algo.epoch
+            progress = round(epoch / algo.epoch,2)
             async_to_sync(channel_layer.group_send)(
                 group_name,
                 {
@@ -165,8 +164,8 @@ def train(pk: int):
         with torch.no_grad():
             test_predictions = model(X_test)
             test_predictions_cpu = test_predictions.cpu()
-        test_predictions = scaler_goal.inverse_transform(test_predictions_cpu.numpy())
-        Y_test_actual = scaler_goal.inverse_transform(Y_test.cpu().numpy())
+            test_predictions = scaler_goal.inverse_transform(test_predictions_cpu.numpy())
+            Y_test_actual = scaler_goal.inverse_transform(Y_test.cpu().numpy())
 
         model_path = MODEL_PATH + algo.name + '.pth'
         torch.save(model, model_path)
@@ -178,16 +177,15 @@ def train(pk: int):
         # 保持两张图片和MSE,RMSE,MAE三个数值
         # 展示前100个预测数据与真实数据的差异
         
-        index_ = 100 // T
-
         plt.clf()
-        plt.plot(test_predictions[0:index_], label='Predicted Values', color='blue', linestyle='dashed')
-        plt.plot(Y_test_actual[0:index_], label='Actual values', color='grey')
+        # x_axis = np.arange(0, index_)
+        plt.plot(test_predictions.flatten()[:100], label='Predicted Values', color='blue', linestyle='dashed')
+        plt.plot(Y_test_actual.flatten()[:100], label='Actual values', color='grey')
         plt.legend()
         plt.title('Actual vs Predicted Values')
         plt.xlabel('Index')
         plt.ylabel('Values')
-        difference_path = RESULT_PATH[1:]+'figure/compare_' + algo.name + '.png'
+        difference_path = RESULT_PATH+'/figure/compare_' + algo.name + '.png'
         plt.savefig(difference_path)
         # 展示损失率
         plt.clf()
@@ -195,7 +193,7 @@ def train(pk: int):
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.title('Training Loss')
-        loss_path = RESULT_PATH[1:]+'figure/training_loss_' + algo.name + '.png'
+        loss_path = RESULT_PATH+'/figure/training_loss_' + algo.name + '.png'
         plt.savefig(loss_path)
 
         mse = np.mean((test_predictions - Y_test_actual) ** 2)
@@ -203,8 +201,8 @@ def train(pk: int):
         mae = np.mean(np.abs(test_predictions - Y_test_actual))
         result = Result(
                     algo=algo,
-                    difference='./api'+difference_path,
-                    loss='./api'+loss_path,
+                    difference='./api'+difference_path[1:],
+                    loss='./api'+loss_path[1:],
                     mse=mse,
                     rmse=rmse,
                     mae=mae,
@@ -215,9 +213,9 @@ def train(pk: int):
         algo.save()
         redis_conn.delete(pk)
         return 0
-    except:
-        # 训练出现错误
-        algo.status = "INI"
-        algo.save()
-        redis_conn.delete(pk)
-        return -1
+    # except:
+    #     # 训练出现错误
+    #     algo.status = "INI"
+    #     algo.save()
+    #     redis_conn.delete(pk)
+    #     return -1
