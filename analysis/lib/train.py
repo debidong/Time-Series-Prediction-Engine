@@ -55,7 +55,7 @@ def create_network(network_type: str, input_size, hidden_sizes, output_size, tra
 # 目前已经添加了简单的try except处理，用于将中断的训练记录回滚至INI状态
 @shared_task
 def train(pk: int):
-    # try:
+    try:
         channel_layer = get_channel_layer()
         group_name = "training_progress"
 
@@ -120,6 +120,7 @@ def train(pk: int):
                 'type': 'send_training_progress',
                 'algoID': pk,
                 'progress': 0.0,
+                'message': ""
             }
         )
 
@@ -145,6 +146,7 @@ def train(pk: int):
                     'type': 'send_training_progress',
                     'algoID': pk,
                     'progress': progress,
+                    'message': ""
                 }
             )
             redis_conn.set(pk, progress)
@@ -156,6 +158,7 @@ def train(pk: int):
                 'type': 'send_training_progress',
                 'algoID': pk,
                 'progress': 1.0,
+                'message': ""
             }
         )
         redis_conn.set(pk, progress)
@@ -175,10 +178,9 @@ def train(pk: int):
             os.makedirs(result_directory)
 
         # 保持两张图片和MSE,RMSE,MAE三个数值
-        # 展示前100个预测数据与真实数据的差异
+        # 展示至多前100个预测数据与真实数据的差异
         
         plt.clf()
-        # x_axis = np.arange(0, index_)
         plt.plot(test_predictions.flatten()[:100], label='Predicted Values', color='blue', linestyle='dashed')
         plt.plot(Y_test_actual.flatten()[:100], label='Actual values', color='grey')
         plt.legend()
@@ -213,9 +215,22 @@ def train(pk: int):
         algo.save()
         redis_conn.delete(pk)
         return 0
-    # except:
-    #     # 训练出现错误
-    #     algo.status = "INI"
-    #     algo.save()
-    #     redis_conn.delete(pk)
-    #     return -1
+    except:
+        # 训练出现错误
+        # TODO: 在多处引入try catch以便区分具体的错误
+        algo.status = "ERR"
+        algo.save()
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                'type': 'send_training_progress',
+                'algoID': pk,
+                'progress': -1,
+                'message': "内存溢出，尝试减小batchsize",
+                'detail': {
+                    'name': algo.name,
+                }
+            }
+        )
+        redis_conn.delete(pk)
+        return -1

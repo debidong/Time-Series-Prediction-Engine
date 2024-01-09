@@ -21,6 +21,7 @@ STATUS = [
     ("INI", "initialized"),
     ("ING", "training"),
     ("FIN", "finished")
+    ("ERR", "error")
 ]
 
 class Algorithm(models.Model):
