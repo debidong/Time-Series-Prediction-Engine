@@ -41,7 +41,7 @@ def AR(pk: int, target, order, window, step) -> np.ndarray:
     plt.title('AR Model Prediction')
     plt.legend()
 
-    path = 'result/forecast_AR_' + file.name + '.png'
+    path = RESULT_PATH[2:]+'/figure/'+'forecast_AR_' + file.name + '.png'
     plt.savefig(path)
 
     forecast_df = pd.DataFrame({target: forecast})
@@ -84,7 +84,7 @@ def ARIMA_model(pk: int, target, order, window, step) -> pd.core.series.Series:
     plt.title('ARIMA Model Prediction')
     plt.legend()
 
-    path = 'result/forecast_ARIMA_' + file.name + '.png'
+    path = RESULT_PATH[2:]+'/figure/'+'forecast_ARIMA_' + file.name + '.png'
     plt.savefig(path)
 
     forecast_df = pd.DataFrame({target: forecast})
@@ -162,7 +162,7 @@ def Fbprophet(pk: int, target, window, step, periods, freq) -> pd.core.frame.Dat
     plt.title('Fbprophet Model Prediction')
     plt.legend()
 
-    path = 'result/forecast_fbprophet_' + file.name + '.png'
+    path = path = RESULT_PATH[2:]+'/figure/'+'forecast_fbprophet_' + file.name + '.png'
     plt.savefig(path)
     
     forecast_df = pd.DataFrame({target: forecast['yhat']})

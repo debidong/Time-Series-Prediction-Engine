@@ -53,7 +53,7 @@ def infer(pk_algo: int, pk_file: int):
     plt.title(algo.neuralNetwork+' Model Prediction')
     plt.legend()
 
-    path = "result/forecast_" + algo.neuralNetwork + "_" + file.name + '.png'
+    path = RESULT_PATH[2:]+'/figure/'+"forecast_" + algo.neuralNetwork + "_" + file.name + '.png'
     plt.savefig(path)
 
     forecast_df = pd.DataFrame({algo.target: forecast})
