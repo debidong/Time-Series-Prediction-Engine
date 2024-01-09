@@ -5,6 +5,8 @@ import numpy as np
 from rest_framework.views import APIView, Response, status
 from django.core.paginator import Paginator
 
+from utils.storage import MODEL_PATH, RESULT_PATH
+
 from .models import Algorithm, Result
 from file.models import File
 from .lib.train import train
@@ -14,7 +16,7 @@ class GetAlgorithmView(APIView):
     """查询全部模型及算法
     """
     def post(self, request):
-        pages = Paginator(Algorithm.objects.order_by("name"), int(request.data.get("size")))
+        pages = Paginator(Algorithm.objects.order_by('-pk'), int(request.data.get("size")))
         algos = pages.get_page(request.data.get("currentPage")).object_list
         res = {
             "status": 200,
@@ -124,21 +126,24 @@ class AlgorithmView(APIView):
         """删除模型及算法
         """
         algo = Algorithm.objects.get(pk=request.data.get("id"))
-        result = Result.objects.get(algo=algo)
-        if algo is not None and result is not None:
-            print(algo)
-            # 删除神经网络模型
-            img_path = [result.difference, result.loss]
-            for p in img_path:
-                os.remove(p[6:])
-            model_name = algo.name + '.pth'
-            os.remove('./torch_models/'+model_name)
-            # 删除数据库内算法记录
+        if algo is not None:
+            try:
+                result = Result.objects.get(algo=algo)
+                # 删除神经网络模型
+                img_path = [result.difference, result.loss]
+                for p in img_path:
+                    os.remove(p[6:])
+                model_name = algo.name + '.pth'
+                os.remove(MODEL_PATH+'/'+model_name)
+                # 删除数据库内算法记录
+            except:
+                pass
+            # 删除没有产生结果的模型
             algo.delete()
             res = {
-                "status": 200,
-                "content": "删除成功"
-            }
+                    "status": 200,
+                    "content": "删除成功"
+                }
             return Response(res, status=status.HTTP_200_OK)
         else:
             res = {
@@ -238,8 +243,7 @@ class TrainingView(APIView):
 
 class ResultView(APIView):
     def get(self, request, image):
-        print("--", os.getcwd())
-        image_path = os.path.join('result', image)
+        image_path = os.path.join(RESULT_PATH[2:], "figure", image)
 
         print(image_path)
         if os.path.exists(image_path):
