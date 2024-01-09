@@ -3,7 +3,6 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 import os
 import pandas as pd
-import datetime
 
 from utils.storage import is_allowed_file, is_duplicate_name, FILE_PATH
 from .models import File

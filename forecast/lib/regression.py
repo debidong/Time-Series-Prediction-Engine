@@ -8,6 +8,7 @@ from statsmodels.tsa.ar_model import AutoReg
 from statsmodels.tsa.arima.model import ARIMA
 from prophet import Prophet
 from utils.storage import RESULT_PATH
+from django.utils import timezone
 
 from forecast.models import File
 
@@ -41,11 +42,11 @@ def AR(pk: int, target, order, window, step) -> np.ndarray:
     plt.title('AR Model Prediction')
     plt.legend()
 
-    path = RESULT_PATH[2:]+'/figure/'+'forecast_AR_' + file.name + '.png'
+    path = RESULT_PATH[2:]+'/figure/'+'forecast_AR_' + file.name + '-'+timezone.now().strftime('%Y%m%d%H%M%S')+ '.png'
     plt.savefig(path)
 
     forecast_df = pd.DataFrame({target: forecast})
-    csv_path = RESULT_PATH + '/forecast_AR_' + file.name + '_result.csv'
+    csv_path = RESULT_PATH + '/forecast_AR_' + file.name + '-'+timezone.now().strftime('%Y%m%d%H%M%S')+'_result.csv'
     forecast_df.to_csv(csv_path, index=False)
 
     return forecast, path
@@ -84,11 +85,11 @@ def ARIMA_model(pk: int, target, order, window, step) -> pd.core.series.Series:
     plt.title('ARIMA Model Prediction')
     plt.legend()
 
-    path = RESULT_PATH[2:]+'/figure/'+'forecast_ARIMA_' + file.name + '.png'
+    path = RESULT_PATH[2:]+'/figure/'+'forecast_ARIMA_' + file.name + '-'+timezone.now().strftime('%Y%m%d%H%M%S')+ '.png'
     plt.savefig(path)
 
     forecast_df = pd.DataFrame({target: forecast})
-    csv_path = RESULT_PATH + '/forecast_ARIMA_' + file.name + '_result.csv'
+    csv_path = RESULT_PATH + '/forecast_ARIMA_' + file.name + '-'+timezone.now().strftime('%Y%m%d%H%M%S')+'_result.csv'
     forecast_df.to_csv(csv_path, index=False)
 
     return forecast, path
@@ -162,11 +163,11 @@ def Fbprophet(pk: int, target, window, step, periods, freq) -> pd.core.frame.Dat
     plt.title('Fbprophet Model Prediction')
     plt.legend()
 
-    path = path = RESULT_PATH[2:]+'/figure/'+'forecast_fbprophet_' + file.name + '.png'
+    path = path = RESULT_PATH[2:]+'/figure/'+'forecast_fbprophet_' + file.name + '-'+timezone.now().strftime('%Y%m%d%H%M%S')+'.png'
     plt.savefig(path)
     
     forecast_df = pd.DataFrame({target: forecast['yhat']})
-    csv_path = RESULT_PATH + '/forecast_Fbprophet_' + file.name + '_result.csv'
+    csv_path = RESULT_PATH + '/forecast_Fbprophet_' + file.name + '-'+timezone.now().strftime('%Y%m%d%H%M%S')+'_result.csv'
     forecast_df.to_csv(csv_path, index=False)
 
     return forecast, path
