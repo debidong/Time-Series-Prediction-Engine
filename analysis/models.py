@@ -20,7 +20,7 @@ from file.models import File
 STATUS = [
     ("INI", "initialized"),
     ("ING", "training"),
-    ("FIN", "finished")
+    ("FIN", "finished"),
     ("ERR", "error")
 ]
 
