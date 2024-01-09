@@ -1,3 +1,7 @@
 .idea
 *.pyc
 identifier.sqlite
+result/*
+result/figure/*
+!result/figure
+temp/*
