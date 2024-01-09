@@ -14,7 +14,7 @@ class TableView(APIView):
     def post(self, request):
         '''查询数据库中全部的文件
         '''
-        pages = Paginator(File.objects.order_by('created'), int(request.data.get("size")))
+        pages = Paginator(File.objects.order_by('-created'), int(request.data.get("size")))
         files = pages.get_page(request.data.get("currentPage")).object_list
         
 
