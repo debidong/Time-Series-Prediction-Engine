@@ -7,6 +7,7 @@ from sklearn.preprocessing import MinMaxScaler
 from analysis.models import Algorithm, Result
 from utils.storage import RESULT_PATH
 from forecast.models import File
+from django.utils import timezone
 
 def infer(pk_algo: int, pk_file: int):
 
@@ -53,7 +54,7 @@ def infer(pk_algo: int, pk_file: int):
     plt.title(algo.neuralNetwork+' Model Prediction')
     plt.legend()
 
-    path = RESULT_PATH[2:]+'/figure/'+"forecast_" + algo.neuralNetwork + "_" + file.name + '.png'
+    path = RESULT_PATH[2:]+'/figure/'+"forecast_" + algo.neuralNetwork + "_" + file.name + '-'+timezone.now().strftime('%Y%m%d%H%M%S')+ '.png'
     plt.savefig(path)
 
     forecast_df = pd.DataFrame({algo.target: forecast})
