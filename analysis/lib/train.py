@@ -104,7 +104,7 @@ def train(pk: int):
         neurons = ast.literal_eval(algo.neurons)
         neurons = [int(x) for x in neurons]
         model = create_network(algo.neuralNetwork, input_dim, neurons, T, training_window)
-        model = model.to('cuda')
+        model = model.to(device)
 
         # 训练
         loss_function = nn.MSELoss()
