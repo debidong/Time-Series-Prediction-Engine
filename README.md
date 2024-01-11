@@ -18,11 +18,33 @@ The project
     You can use `anaconda` or `miniconda` to install package dependencies. Paste `environment.yml`, then use `conda create -f environment.yml`. Then activate the environment with `conda activate Django`.
 
     You can also use `pip install -r requirements.txt` to install these packages, or install them one by one manually when trying to start the server.
-    
+
 2. Run **celery** under the root directory using `celery -A DataPrediction worker --loglevel=info --pool=solo  --concurrency=1` (for Windows).
-3. Run a [Redis server](https://github.com/tporadowski/redis/releases). You may need to change the address, port number and password of the redis server in `utils/db.py`.   
-4. Run `python manage.py runserver`. The service will run on port 8000 by default.
-5. Run the front-end server.
+
+3. Run a [Redis server](https://github.com/tporadowski/redis/releases). You may need to change the address, port number and password of the redis server in `utils/db.py`.
+
+4. **Make sure there are directories for the storage of uploaded and result files.**
+
+    There should be `temp` `dataset` `result` `result/figure` `torch_models` under the root directory.
+
+    ```shell
+    ├─analysis
+    ├─assets
+    ├─DataPrediction
+    ├─file
+    ├─forecast
+    ├─utils # name of directories are defined here at utils.storage
+    │ # Make sure the following directories exist
+    ├─result
+    │  └─figure
+    ├─temp
+    ├─torch_models
+    └─dataset
+    ```
+
+5. Run `python manage.py runserver`. The service will run on port 8000 by default.
+
+6. Run the front-end server.
 
 # Demo
 
